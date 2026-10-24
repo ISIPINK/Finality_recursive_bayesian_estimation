@@ -1,0 +1,136 @@
+\documentclass[18pt,aspectratio=149]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amsfonts, mathtools, amsthm, amssymb}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta}
+\usepackage{xcolor}
+\usepackage[english]{babel}
+\usepackage{sansmathaccent}
+\usepackage{graphicx}
+
+\pdfmapfile{+sansmathaccent.map}
+
+\title[Recursive Bayesian Estimation]{Recursive Bayesian Estimation}
+\author{Isidoor Pinillo Esquivel}
+\usetheme{Madrid}
+\date{}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+  \vfill
+  \begin{center}
+    \raisebox{-0.3\height}{\includegraphics[height=1.4em]{eu_emblem.png}}%
+    \hspace{0.5em}%
+    {\tiny \textcolor{gray}{This work is funded by the European Union Horizon MSCA DN programme FINALITY (G.A. 101168816)}}
+  \end{center}
+\end{frame}
+
+
+
+% ------------------------------------------------------------------------------
+\begin{frame}{Disclaimer}
+  My knowledge on Bayesian stuff is rusty. \\
+  Interrupt for questions or corrections.
+\end{frame}
+
+% ------------------------------------------------------------------------------
+%  there is a connection between HMM and SSM
+\begin{frame}{Hidden Markov/ State Space Model Example}
+  % Row 1: Top two quadrants
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.48\textwidth}
+      \uncover<1->{
+        \centering
+        \textbf{State Transition Dynamics}
+        \vspace{0.8em}
+
+        \begin{tikzpicture}[
+          every node/.style={font=\small},
+          every edge/.style={draw, thick, -{Stealth[length=2.2mm]}}
+        ]
+          \node (F) at (0,0) {Focused};
+          \node (D) at (2.5,0) {Distracted};
+
+          % Transitions between states
+          \path (F) edge[bend left=25] node[above, font=\footnotesize] {$p$} (D);
+          \path (D) edge[bend left=25] node[below, font=\footnotesize] {$p$} (F);
+
+          % Self-loops
+          \path (F) edge[loop left, min distance=8mm] node[left, font=\footnotesize] {$1-p$} (F);
+          \path (D) edge[loop right, min distance=8mm] node[right, font=\footnotesize] {$1-p$} (D);
+        \end{tikzpicture}
+      }
+    \end{column}
+
+    \begin{column}{0.48\textwidth}
+      \uncover<2->{
+        \centering
+        \textbf{Observation Probabilities}
+        \vspace{0.6em}
+        \begin{align*}
+          P(\text{Respond} \mid \text{Focused}) &= 0.9 \\
+          P(\text{Respond} \mid \text{Distracted}) &= 0.5
+        \end{align*}
+      }
+    \end{column}
+  \end{columns}
+
+  \vspace{1.5em}
+
+  % Row 2: Bottom two quadrants
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.48\textwidth}
+      \uncover<3->{
+        \centering
+        \textbf{HMM/SSM}
+        \vspace{0.8em}
+
+        \begin{tikzpicture}[
+          every node/.style={font=\normalsize},
+          every edge/.style={draw, thick, -{Stealth[length=2.2mm]}}
+        ]
+          % Hidden states (latent)
+          \node (h1) at (0, 1.2) {$h_1$};
+          \node (h2) at (1.3, 1.2) {$h_2$};
+          \node (h3) at (2.6, 1.2) {$h_3$};
+
+          % Chain transitions
+          \path (h1) edge (h2);
+          \path (h2) edge (h3);
+
+          % Observations
+          \node (o1) at (0, 0) {$o_1$};
+          \node (o2) at (1.3, 0) {$o_2$};
+          \node (o3) at (2.6, 0) {$o_3$};
+
+          % Vertical emission arrows
+          \path (h1) edge (o1);
+          \path (h2) edge (o2);
+          \path (h3) edge (o3);
+
+          % Labels on left
+          \node[left=0.2cm of h1, font=\footnotesize] {Hidden:};
+          \node[left=0.2cm of o1, font=\footnotesize] {Observe:};
+        \end{tikzpicture}
+      }
+    \end{column}
+
+    \begin{column}{0.48\textwidth}
+      \uncover<4->{
+        \centering
+        \textbf{Recursive Bayesian Estimation}
+        \vspace{0.6em}
+        \[
+          P(o_{t+1} \mid o_{1:t}) \quad \text{or} \quad P(h_{t+1} \mid o_{1:t})
+        \]
+        \vspace{-0.3em}
+        {\footnotesize where $o_{1:t} = (o_1, o_2, \dots, o_t)$ is observation history up to time $t$.}
+      }
+    \end{column}
+  \end{columns}
+\end{frame}
+
+
+\end{document}
