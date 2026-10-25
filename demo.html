@@ -75,6 +75,21 @@
             font-size: 0.85rem;
         }
 
+        .nav-link {
+            font-size: 0.78rem;
+            color: var(--color-focused);
+            text-decoration: none;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            transition: all 0.15s;
+        }
+
+        .nav-link:hover {
+            background: rgba(56, 189, 248, 0.2);
+        }
+
         /* 2-Column Full Screen Layout */
         .app-layout {
             display: grid;
@@ -342,8 +357,13 @@
 
 <body>
     <header>
-        <h1>Recursive Bayesian Estimation</h1>
-        <p class="subtitle">Live Filter Tracking Hidden State $h_t$ (Focused vs. Distracted)</p>
+        <div>
+            <h1>Recursive Bayesian Estimation</h1>
+            <p class="subtitle">Live Filter Tracking Hidden State $h_t$ (Focused vs. Distracted)</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <a href="demo2.html" class="nav-link">&rarr; Demo 2</a>
+        </div>
     </header>
 
     <div class="app-layout">
