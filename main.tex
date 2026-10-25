@@ -35,7 +35,7 @@
         \item My knowledge on Bayesian stuff is rusty.
         \item Interrupt for questions or corrections.
         \item In D6.1 Bayesian methods are mentioned.
-        \item Abuse of notation from: \textit{Bayesian Filtering and Smoothing} (Second Edition).
+        \item Abuse of notation from: \textit{Bayesian Filtering and Smoothing} (Second Edition)~\cite{sarkka_bayesian_nodate}.
 
     \end{itemize}
 \end{frame}
@@ -500,5 +500,111 @@
     \end{itemize}
 \end{frame}
 
-% here we talk about the connection between bayesian bandits and stochastic bandits we cite tor latimore
+% ------------------------------------------------------------------------------
+\begin{frame}{Duality: Stochastic vs.\ Bayesian Bandits}
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.48\textwidth}
+            \textbf{Stochastic (Frequentist)}
+            \begin{itemize}
+                \item Fixed environment $\nu \in \mathcal{E}$.
+                \item Minimax regret:
+                \vspace{-0.4em}
+                \[
+                    R_n^*(\mathcal{E}) = \inf_{\pi} \sup_{\nu \in \mathcal{E}} R_n(\pi, \nu)
+                \]
+            \end{itemize}
+        \end{column}
+
+        \begin{column}{0.48\textwidth}
+            \textbf{Bayesian}
+            \begin{itemize}
+                \item Prior $Q \in \Delta(\mathcal{E})$: $\nu \sim Q$.
+                \item Bayesian regret:
+                \vspace{-0.4em}
+                \[
+                    \mathrm{BR}_n(\pi, Q) = \mathbb{E}_{\nu \sim Q} [R_n(\pi, \nu)]
+                \]
+            \end{itemize}
+        \end{column}
+    \end{columns}
+
+    \vspace{0.3em}
+    \hrule
+    \vspace{0.3em}
+
+    \textbf{Minimax Duality via Sion's Theorem}
+    \begin{itemize}
+        \item Regret is convex in policy $\pi$ and linear in prior distribution $Q$.
+        \item \textbf{Sion's minimax theorem} (compact $\mathcal{E}$) allows swapping $\inf$ and $\sup$:
+        \vspace{-0.4em}
+        \[
+            \inf_{\pi} \sup_{\nu \in \mathcal{E}} R_n(\pi, \nu)
+            = \sup_{Q \in \Delta(\mathcal{E})} \inf_{\pi} \mathrm{BR}_n(\pi, Q)
+        \]
+        \vspace{-0.6em}
+        \item \textbf{Duality}: Minimax regret equals Bayes regret under worst-case prior $Q^*$.
+        \item Frequentist minimax lower bounds can be proved via Bayesian priors!
+    \end{itemize}
+
+    \vspace{0.2em}
+    {\tiny \textcolor{gray}{Reference: \cite{lattimore_bandit_2020}}}
+\end{frame}
+
+% ------------------------------------------------------------------------------
+\begin{frame}{Gaussian Processes: Priors over Functions}
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.48\textwidth}
+            \textbf{Gaussian Process Prior}
+            \begin{itemize}
+                \item Finite evaluations are jointly Gaussian:
+                \vspace{-0.4em}
+                \[
+                    [f(x_1), \dots, f(x_n)]^\top \sim \mathcal{N}(\mathbf{0}, \mathbf{K})
+                \]
+                \vspace{-0.6em}
+                \item $f \sim \mathcal{GP}(0, k)$ with $\mathbf{K}_{ij} = k(x_i, x_j)$.
+            \end{itemize}
+        \end{column}
+
+        \begin{column}{0.48\textwidth}
+            \textbf{Covariance Kernel $k(x, x')$}
+            \begin{itemize}
+                \item \textbf{Squared Exponential (RBF)}:
+                \vspace{-0.4em}
+                \[
+                    k(x, x') = \sigma^2 \exp\Big(-\frac{\|x - x'\|^2}{2\ell^2}\Big)
+                \]
+                \vspace{-0.6em}
+                \item Smoothness: lengthscale $\ell$, variance $\sigma^2$.
+            \end{itemize}
+        \end{column}
+    \end{columns}
+
+    \vspace{-0.1em}
+    \hrule
+    \vspace{0.1em}
+
+    \textbf{GP Regression: Exact Conditioning}
+    \begin{itemize}
+        \item Data $\mathcal{D}$: $\mathbf{y} = f(X) + \boldsymbol{\varepsilon}$, with $\boldsymbol{\varepsilon} \sim \mathcal{N}(\mathbf{0}, \sigma_n^2 \mathbf{I})$.
+        \item Conditioning yields \textbf{exact posterior} $f(x^*) \mid \mathcal{D} \sim \mathcal{N}(\mu_*, \sigma_*^2)$:
+        \vspace{-0.5em}
+        \[
+            \mu_* = \mathbf{k}_*^\top (\mathbf{K} + \sigma_n^2 \mathbf{I})^{-1} \mathbf{y}, \qquad
+            \sigma_*^2 = k(x^*, x^*) - \mathbf{k}_*^\top (\mathbf{K} + \sigma_n^2 \mathbf{I})^{-1} \mathbf{k}_*
+        \]
+        \vspace{-0.7em}
+        \item Point prediction via $\mu_*$; epistemic uncertainty via $\sigma_*^2$.
+        \item Continuous-space analog of recursive Gaussian conditioning.
+    \end{itemize}
+
+\end{frame}
+
+% ------------------------------------------------------------------------------
+\begin{frame}[allowframebreaks]{References}
+    \footnotesize
+    \bibliographystyle{apalike}
+    \bibliography{references}
+\end{frame}
+
 \end{document}
