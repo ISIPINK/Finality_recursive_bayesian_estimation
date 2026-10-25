@@ -312,5 +312,53 @@
         \end{column}
     \end{columns}
 \end{frame}
-%
+
+\begin{frame}{Partially Observable MDP (POMDP)}
+    \centering
+    \vspace{-0.2em}
+    \textbf{POMDP = Partially Observable MDP}
+
+    \vspace{0.6em}
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.44\textwidth}
+            \centering
+            \textbf{MDP + Hidden Markov Chain}
+            \vspace{0.4em}
+            \begin{itemize}
+                \item State $h_t$ is hidden.
+                \item Hidden MC:
+                \vspace{-0.3em}
+                \[
+                    h_{t+1} \sim p(h_{t+1} \mid h_t, a_t)
+                \]
+                \item $o_t$ is not Markovian:
+                \vspace{-0.3em}
+                \[
+                    p(o_{t+1} \mid o_{1:t}) \ne p(o_{t+1} \mid o_t)
+                \]
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.08\textwidth}
+            \centering
+            \vspace{5.5em}
+            {\Large $\longrightarrow$}
+        \end{column}
+        \begin{column}{0.46\textwidth}
+            \centering
+            \textbf{MDP + Belief MC}
+            \vspace{0.4em}
+            \begin{itemize}
+                \item Belief state $b_t(h_t) = p(h_t \mid o_{1:t})$.
+                \item $\{b_t\}$ is a Markov Chain (RBE).
+                \item MDP on beliefs:
+                \vspace{-0.5em}
+                \[
+                    b_{t+1} = \tau(b_t, a_t, o_{t+1})
+                \]
+                \item Reward: $\rho(b_t, a_t) = \mathbb{E}_{h_t \sim b_t}[r_t(h_t, a_t)]$.
+            \end{itemize}
+        \end{column}
+    \end{columns}
+
+\end{frame}
 \end{document}
