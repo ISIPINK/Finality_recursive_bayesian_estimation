@@ -549,61 +549,224 @@
     \vspace{0.2em}
     {\tiny \textcolor{gray}{Reference: \cite{lattimore_bandit_2020}}}
 \end{frame}
+% ------------------------------------------------------------------------------
+\begin{frame}{Imperfect-Information Games $\to$ Belief Games \& POMDPs}
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.48\textwidth}
+            \textbf{Imperfect Info (e.g., Poker)}
+            \begin{itemize}
+                \item Hidden private states (cards).
+                \item Actions leak private info; subgame solving must balance across hands.
+            \end{itemize}
+        \end{column}
+
+        \begin{column}{0.48\textwidth}
+            \textbf{Public Belief State (PBS)}
+            \begin{itemize}
+                \item Public history is common knowledge.
+                \item Joint belief $\beta \in \Delta(\mathcal{S}_1 \times \mathcal{S}_2)$.
+                \item Yields \textbf{perfect-information game} on belief states (Brown et al., ReBeL).
+            \end{itemize}
+        \end{column}
+    \end{columns}
+
+    \vspace{0.3em}
+    \hrule
+    \vspace{0.25em}
+
+    \textbf{Reduction to POMDP (Known Opponent Strategy)}
+    \begin{itemize}
+        \item If opponent policy $\pi_{-i}$ is \textbf{fixed/known}, it is absorbed into dynamics:
+        \vspace{-0.45em}
+        \[
+            p(s', o \mid s, a_i) = \sum_{a_{-i}} \pi_{-i}(a_{-i} \mid s, a_i) \, p(s', o \mid s, a_i, a_{-i})
+        \]
+        \vspace{-0.65em}
+        \item Equilibrium collapses to a \textbf{single-agent POMDP} (Belief MDP).
+    \end{itemize}
+
+    \vspace{0.1em}
+    {\tiny \textcolor{gray}{Reference: \cite{london_machine_learning_meetup_noam_2021}}}
+\end{frame}
+
+% ------------------------------------------------------------------------------
+\begin{frame}{From Discrete Bandits to Continuous Domains}
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.48\textwidth}
+            \textbf{\textcolor{blue!80!black}{Discrete Multi-Armed Bandit}}
+            \begin{itemize}
+                \item Finite action set $a \in \{1, \dots, K\}$.
+                \item Independent reward distributions.
+                \item Belief: posterior statistics per arm.
+                \item Fails on continuous domains $\mathcal{X} \subset \mathbb{R}^d$.
+            \end{itemize}
+        \end{column}
+
+        \begin{column}{0.48\textwidth}
+            \textbf{\textcolor{teal!90!black}{Continuous Black-Box Setting}}
+            \begin{itemize}
+                \item Continuous domain $\mathcal{X} \subset \mathbb{R}^d$ ($\infty$ arms).
+                \item Objective: $\max_{x \in \mathcal{X}} f(x)$ with costly $f$.
+                \item Correlated: $x \approx x' \implies f(x) \approx f(x')$.
+                \item \textbf{Latent state}: the unknown function $f$.
+            \end{itemize}
+        \end{column}
+    \end{columns}
+
+    \vspace{0.3em}
+    \hrule
+    \vspace{0.25em}
+
+    \textbf{From Scalar Beliefs to Function Distributions}
+    \begin{itemize}
+        \item We need a prior distribution over an infinite-dimensional space $\mathcal{F}$.
+        \item Closed-form recursive Bayesian conditioning $\implies$ \textbf{Gaussian Processes}!
+    \end{itemize}
+\end{frame}
 
 % ------------------------------------------------------------------------------
 \begin{frame}{Gaussian Processes: Priors over Functions}
     \begin{columns}[T,onlytextwidth]
         \begin{column}{0.48\textwidth}
-            \textbf{Gaussian Process Prior}
+            \textbf{\textcolor{blue!80!black}{Definition: $f \sim \mathcal{GP}(m, k)$}}
             \begin{itemize}
-                \item Finite evaluations are jointly Gaussian:
-                \vspace{-0.4em}
+                \item Collection of random variables, any finite subset is jointly Gaussian:
+                \vspace{-0.3em}
                 \[
-                    [f(x_1), \dots, f(x_n)]^\top \sim \mathcal{N}(\mathbf{0}, \mathbf{K})
+                    [f(x_1), \dots, f(x_n)]^\top \sim \mathcal{N}(\mathbf{m}, \mathbf{K})
                 \]
-                \vspace{-0.6em}
-                \item $f \sim \mathcal{GP}(0, k)$ with $\mathbf{K}_{ij} = k(x_i, x_j)$.
+                \vspace{-0.5em}
+                \item Mean: $m(x) = \mathbb{E}[f(x)]$ (often $0$).
+                \item Covariance: $\mathbf{K}_{ij} = k(x_i, x_j)$.
             \end{itemize}
         \end{column}
 
         \begin{column}{0.48\textwidth}
-            \textbf{Covariance Kernel $k(x, x')$}
+            \textbf{\textcolor{teal!90!black}{Covariance Kernel $k(x, x')$}}
             \begin{itemize}
-                \item \textbf{Squared Exponential (RBF)}:
-                \vspace{-0.4em}
+                \item Encodes spatial correlation:
+                \vspace{-0.3em}
                 \[
-                    k(x, x') = \sigma^2 \exp\Big(-\frac{\|x - x'\|^2}{2\ell^2}\Big)
+                    k(x, x') = \mathrm{Cov}(f(x), f(x'))
                 \]
-                \vspace{-0.6em}
-                \item Smoothness: lengthscale $\ell$, variance $\sigma^2$.
+                \vspace{-0.5em}
+                \item \textbf{Squared Exponential (RBF)}:
+                \vspace{-0.3em}
+                \[
+                    k(x, x') = \sigma_f^2 \exp\Big(-\frac{\|x - x'\|^2}{2\ell^2}\Big)
+                \]
+                \vspace{-0.5em}
+                \item Lengthscale $\ell$: smoothness / reach.
             \end{itemize}
         \end{column}
     \end{columns}
 
-    \vspace{-0.1em}
+    \vspace{0.3em}
     \hrule
-    \vspace{0.1em}
+    \vspace{0.25em}
 
-    \textbf{GP Regression: Exact Conditioning}
-    \begin{itemize}
-        \item Data $\mathcal{D}$: $\mathbf{y} = f(X) + \boldsymbol{\varepsilon}$, with $\boldsymbol{\varepsilon} \sim \mathcal{N}(\mathbf{0}, \sigma_n^2 \mathbf{I})$.
-        \item Conditioning yields \textbf{exact posterior} $f(x^*) \mid \mathcal{D} \sim \mathcal{N}(\mu_*, \sigma_*^2)$:
-        \vspace{-0.5em}
-        \[
-            \mu_* = \mathbf{k}_*^\top (\mathbf{K} + \sigma_n^2 \mathbf{I})^{-1} \mathbf{y}, \qquad
-            \sigma_*^2 = k(x^*, x^*) - \mathbf{k}_*^\top (\mathbf{K} + \sigma_n^2 \mathbf{I})^{-1} \mathbf{k}_*
-        \]
-        \vspace{-0.7em}
-        \item Point prediction via $\mu_*$; epistemic uncertainty via $\sigma_*^2$.
-        \item Continuous-space analog of recursive Gaussian conditioning.
-    \end{itemize}
+    \textbf{Nonparametric Prior}: Instead of parameterizing $f(x; \mathbf{w})$, a GP directly specifies a consistent prior over the infinite-dimensional function space.
+\end{frame}
 
+% ------------------------------------------------------------------------------
+\begin{frame}{Gaussian Conditioning: Exact Belief Updating}
+    Given observations $\mathcal{D}_t = \{(x_i, y_i)\}_{i=1}^t$ with $y_i = f(x_i) + \varepsilon_i$, $\varepsilon_i \sim \mathcal{N}(0, \sigma_n^2)$:
+    \vspace{-0.3em}
+    \[
+        \begin{pmatrix} \mathbf{y} \\ f(x^*) \end{pmatrix} \sim \mathcal{N}\left( \mathbf{0}, \begin{pmatrix} \mathbf{K} + \sigma_n^2 \mathbf{I} & \mathbf{k}_* \\ \mathbf{k}_*^\top & k(x^*, x^*) \end{pmatrix} \right)
+    \]
+    \vspace{-0.4em}
+    \hrule
+    \vspace{0.25em}
+
+    \textbf{Exact Posterior Belief}: $f(x^*) \mid \mathcal{D}_t \sim \mathcal{N}(\mu_t(x^*), \sigma_t^2(x^*))$
+    \vspace{-0.3em}
+    \[
+        \mu_t(x^*) = \mathbf{k}_*^\top (\mathbf{K} + \sigma_n^2 \mathbf{I})^{-1} \mathbf{y}, \qquad
+        \sigma_t^2(x^*) = k(x^*, x^*) - \mathbf{k}_*^\top (\mathbf{K} + \sigma_n^2 \mathbf{I})^{-1} \mathbf{k}_*
+    \]
+    \vspace{-0.4em}
+
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.48\textwidth}
+            \textbf{\textcolor{blue!80!black}{Exploitation: Mean $\mu_t(x^*)$}}
+            \begin{itemize}
+                \item Best estimate of function value.
+                \item Interpolates data (smooths if $\sigma_n^2 > 0$).
+            \end{itemize}
+        \end{column}
+
+        \begin{column}{0.48\textwidth}
+            \textbf{\textcolor{teal!90!black}{Exploration: Variance $\sigma_t^2(x^*)$}}
+            \begin{itemize}
+                \item Quantifies \textbf{epistemic uncertainty}.
+                \item Drops near samples; high in gaps.
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ------------------------------------------------------------------------------
+\begin{frame}{Bayesian Optimization: A POMDP over Function Space}
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.48\textwidth}
+            \textbf{\textcolor{blue!80!black}{POMDP Elements}}
+            \begin{itemize}
+                \item \textbf{State} $s$: Unknown $f \sim \mathcal{GP}(0, k)$.
+                \item \textbf{Action} $a_t$: Query point $x_t \in \mathcal{X}$.
+                \item \textbf{Obs} $o_t$: $y_t = f(x_t) + \varepsilon_t$.
+                \item \textbf{Belief} $b_t$: Posterior $\mathcal{GP}(\mu_t, \sigma_t^2)$.
+            \end{itemize}
+        \end{column}
+
+        \begin{column}{0.48\textwidth}
+            \textbf{\textcolor{teal!90!black}{Decision Regimes}}
+            \begin{itemize}
+                \item \textbf{Pure Exploration}: Terminal payoff at $T$.
+                \item \textbf{Cumulative}: Reward at each step $t$.
+                \item Exact belief update via GP conditioning.
+            \end{itemize}
+        \end{column}
+    \end{columns}
+
+    \vspace{0.25em}
+    \hrule
+    \vspace{0.25em}
+
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.48\textwidth}
+            \textbf{Simple Regret (Pure Explore)}
+            \vspace{-0.3em}
+            \[
+                S_T = \max\nolimits_{x \in \mathcal{X}} f(x) - f(\hat{x}_T)
+            \]
+            \vspace{-0.5em}
+            \begin{itemize}
+                \item Payoff only at final recommendation $\hat{x}_T$.
+                \item E.g., hyperparameter tuning.
+            \end{itemize}
+        \end{column}
+
+        \begin{column}{0.48\textwidth}
+            \textbf{Cumulative Regret (Bandit)}
+            \vspace{-0.3em}
+            \[
+                R_T = \sum\nolimits_{t=1}^T \big(\max\nolimits_x f(x) - f(x_t)\big)
+            \]
+            \vspace{-0.5em}
+            \begin{itemize}
+                \item Exploit during optimization.
+                \item E.g., online routing, clinical trials.
+            \end{itemize}
+        \end{column}
+    \end{columns}
 \end{frame}
 
 % ------------------------------------------------------------------------------
 \begin{frame}[allowframebreaks]{References}
     \footnotesize
     \bibliographystyle{apalike}
+    \nocite{*}
     \bibliography{references}
 \end{frame}
 
