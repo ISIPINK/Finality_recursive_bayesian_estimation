@@ -124,17 +124,40 @@
         \begin{column}{0.48\textwidth}
             \uncover<4->{
                 \centering
-                \textbf{Recursive Bayesian Estimation}
-                \vspace{0.6em}
-                \[
-                    P(o_{t+1} \mid o_{1:t}) \quad \text{or} \quad P(h_{t+1} \mid o_{1:t})
-                \]
-                \vspace{-0.3em}
-                {\footnotesize where $o_{1:t} = (o_1, o_2, \dots, o_t)$ is observation history up to time $t$.}
+                \textbf{Belief state at time $t$}
+                \vspace{1em}
+
+                $p(h_{t} \mid o_{1:t})$ all info for after $t$\\
+                \vspace{0.3em}
+                {\footnotesize $o_{1:t} = (o_1, o_2, \dots, o_t)$ is observation history.}
             }
         \end{column}
     \end{columns}
 \end{frame}
 
 
+% ------------------------------------------------------------------------------
+\begin{frame}{Law of Total Probability \& Bayes' Rule}
+    \textbf{Law of Total Probability}
+    \begin{align*}
+        P(A)                  & = \sum_{i} P(A \mid B_i) P(B_i)                                     \\
+        p(h_t \mid o_{1:t-1}) & = \int p(h_t \mid h_{t-1}) \, p(h_{t-1} \mid o_{1:t-1}) \, dh_{t-1}
+    \end{align*}
+
+    \vspace{0.4em}
+    \hrule
+    \vspace{0.6em}
+
+    \textbf{Bayes' Rule}
+    \begin{align*}
+        P(A \mid B)         & = \frac{P(B \mid A) P(A)}{P(B)}                                          \\
+        p(h_t \mid o_{1:t}) & = \frac{p(o_t \mid h_t) \, p(h_t \mid o_{1:t-1})}{p(o_t \mid o_{1:t-1})}
+    \end{align*}
+\end{frame}
+
+
+
+
+
+%
 \end{document}
