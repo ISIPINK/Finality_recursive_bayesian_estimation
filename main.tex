@@ -128,7 +128,7 @@
                 \textbf{Belief state at time $t$}
                 \vspace{1em}
 
-                $p(h_{t} \mid o_{1:t})$ all info for after $t$\\
+                $b_t(h_t) := p(h_{t} \mid o_{1:t})$ all info for after $t$\\
                 \vspace{0.3em}
                 {\footnotesize $o_{1:t} = (o_1, o_2, \dots, o_t)$ is observation history.}
             }
@@ -162,13 +162,13 @@
     \centering
     % Transition arrow
     \begin{tikzpicture}[
-        every node/.style={font=\large},
+        every node/.style={font=\normalsize},
         every edge/.style={draw, thick, -{Stealth[length=2.5mm]}}
         ]
-        \node (curr) at (0, 0) {$p(h_t \mid o_{1:t})$};
-        \node (next) at (6, 0) {$p(h_{t+1} \mid o_{1:t+1})$};
+        \node (curr) at (0, 0) {$b_t(h_t) := p(h_t \mid o_{1:t})$};
+        \node (next) at (6.8, 0) {$b_{t+1}(h_{t+1}) := p(h_{t+1} \mid o_{1:t+1})$};
 
-        \path (curr) edge node[above=0.2cm, font=\normalsize\bfseries] {Recursive Bayesian Estimation} (next);
+        \path (curr) edge node[above=0.15cm, font=\small\bfseries] {Recursive Bayesian Estimation} (next);
     \end{tikzpicture}
 
     \vspace{0.8em}
@@ -176,7 +176,7 @@
     \raggedright
     \textbf{1. Prediction Step} {\footnotesize (Law of Total Probability)}
     \[
-        \overbrace{p(h_{t+1} \mid o_{1:t})}^{\text{Predicted Belief}} = \int \overbrace{\textcolor{blue!80!black}{p(h_{t+1} \mid h_t)}}^{\text{\textcolor{blue!80!black}{Transition Model}}} \, p(h_t \mid o_{1:t}) \, dh_t
+        \overbrace{p(h_{t+1} \mid o_{1:t})}^{\text{Predicted Belief}} = \int \overbrace{\textcolor{blue!80!black}{p(h_{t+1} \mid h_t)}}^{\text{\textcolor{blue!80!black}{Transition Model}}} \, \underbrace{p(h_t \mid o_{1:t})}_{b_t(h_t)} \, dh_t
     \]
 
     \vspace{0.3em}
@@ -184,10 +184,55 @@
     \textbf{2. Update Step} {\footnotesize (Bayes' Rule)}
     \vspace{-1.8em}
     \begin{align*}
-        p(h_{t+1} \mid o_{1:t+1})
+        b_{t+1}(h_{t+1}) = p(h_{t+1} \mid o_{1:t+1})
          & = \frac{\overbrace{\textcolor{teal!90!black}{p(o_{t+1} \mid h_{t+1})}}^{\text{\textcolor{teal!90!black}{Observation Model}}} \, p(h_{t+1} \mid o_{1:t})}{p(o_{t+1} \mid o_{1:t})} \\[0.5em]
          & = \frac{\textcolor{teal!90!black}{p(o_{t+1} \mid h_{t+1})} \, p(h_{t+1} \mid o_{1:t})}{\int \textcolor{teal!90!black}{p(o_{t+1} \mid h_{t+1})} \, p(h_{t+1} \mid o_{1:t}) \, dh_{t+1}}
     \end{align*}
+\end{frame}
+%
+% ------------------------------------------------------------------------------
+\begin{frame}{Belief Markov Chain}
+    \centering
+    \vspace{-0.4em}
+    \textbf{$\{b_t\}$ is a Markov Chain:}
+    \vspace{-0.7em}
+    \[
+        p(b_{t+1} \mid b_t, b_{t-1}, \dots, b_0) = p(b_{t+1} \mid b_t)
+    \]
+
+    \vspace{-0.2em}
+    % Branching diagram
+    \begin{tikzpicture}[
+        every node/.style={font=\footnotesize},
+        box/.style={draw, rounded corners, thick, inner sep=3.5pt, align=center, fill=gray!8},
+        arrow/.style={draw, thick, -{Stealth[length=2.2mm]}}
+        ]
+        % Root: Current belief
+        \node[box] (root) at (-2.2, 0) {$b_t = \begin{bmatrix} b_t(\text{Focused}) \\ b_t(\text{Distracted}) \end{bmatrix}$};
+
+        % Branches
+        \node[box, fill=teal!10] (up) at (6.6, 0.85) {$b_{t+1}^{(\text{Respond})}$};
+        \node[box, fill=orange!10] (down) at (6.6, -0.85) {$b_{t+1}^{(\text{No Response})}$};
+
+        % Edges with transition probabilities
+        \path (root.east) edge[arrow] node[above=1pt, pos=0.52, sloped] {$o_{t+1} = \text{Respond} \quad p(\text{Respond} \mid b_t)$} (up.west);
+        \path (root.east) edge[arrow] node[below=1pt, pos=0.52, sloped] {$o_{t+1} = \text{No Response} \quad p(\text{No-Resp} \mid b_t)$} (down.west);
+    \end{tikzpicture}
+
+    \vspace{0.4em}
+    \hrule
+    \vspace{0.4em}
+
+    \[
+        p(\text{Respond} \mid b_t) = \textcolor{teal!90!black}{0.9} \, p(h_{t+1} = \text{F} \mid b_t) + \textcolor{teal!90!black}{0.5} \, p(h_{t+1} = \text{D} \mid b_t)
+    \]
+
+    \vspace{0.2em}
+    \raggedright
+    \begin{itemize}
+        \item Both branch probabilities and $b_{t+1}$ depend \textbf{only} on $b_t$.
+        \item Observation history $o_{1:t}$ is \textbf{not needed}.
+    \end{itemize}
 \end{frame}
 %
 \end{document}

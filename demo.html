@@ -454,12 +454,12 @@
                             stroke-width="2">
                             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                         </svg>
-                        Belief State $P(\text{Focused} \mid o_{1:t})$ vs. True Hidden State
+                        Belief State $b_t(h_t) := P(h_t \mid o_{1:t})$ vs. True Hidden State
                     </span>
                     <div style="display: flex; gap: 1rem;">
                         <span class="legend-tag">
                             <span class="legend-line" style="background: var(--color-focused);"></span> Estimated
-                            $P(\text{Focused})$
+                            $b_t(\text{Focused}) = P(\text{Focused} \mid o_{1:t})$
                         </span>
                         <span class="legend-tag">
                             <span class="legend-dashed" style="border-color: var(--color-true-ground);"></span>
@@ -489,8 +489,8 @@
                     <span id="statObs" style="color: var(--text-sub);">Prior (None)</span>
                 </div>
                 <div>
-                    <span>Belief:</span>
-                    <strong id="statBelief" style="color: var(--color-focused);">P(F)=0.500 | P(D)=0.500</strong>
+                    <span>Belief $b_t(h_t)$:</span>
+                    <strong id="statBelief" style="color: var(--color-focused);">b_t(F)=0.500 | b_t(D)=0.500</strong>
                 </div>
             </div>
         </div>
@@ -616,7 +616,7 @@
             }
 
             statObs.innerHTML = `<span class="badge-pill" style="background: ${observation === 'Respond' ? 'var(--color-resp-bg)' : 'var(--color-no-resp-bg)'}; color: ${observation === 'Respond' ? 'var(--color-resp)' : 'var(--color-no-resp)'};">${observation === 'Respond' ? 'Responded' : 'No Response'}</span>`;
-            statBelief.innerHTML = `P(F)=<strong style="color:var(--color-focused)">${beliefF.toFixed(3)}</strong> | P(D)=<strong style="color:var(--color-distracted)">${(1 - beliefF).toFixed(3)}</strong>`;
+            statBelief.innerHTML = `b_t(F)=<strong style="color:var(--color-focused)">${beliefF.toFixed(3)}</strong> | b_t(D)=<strong style="color:var(--color-distracted)">${(1 - beliefF).toFixed(3)}</strong>`;
 
             drawChain();
             drawGraph();
@@ -675,7 +675,7 @@
             statTrue.style.color = 'var(--color-focused)';
             statTrue.textContent = 'Focused';
             statObs.textContent = `Prior (None)`;
-            statBelief.innerHTML = `P(F)=0.500 | P(D)=0.500`;
+            statBelief.innerHTML = `b_t(F)=0.500 | b_t(D)=0.500`;
 
             drawChain();
             drawGraph();
