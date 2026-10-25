@@ -35,7 +35,8 @@
         \item My knowledge on Bayesian stuff is rusty.
         \item Interrupt for questions or corrections.
         \item In D6.1 Bayesian methods are mentioned.
-        \item Notation comes from: \textit{Bayesian Filtering and Smoothing} (Second Edition).
+        \item Abuse of notation from: \textit{Bayesian Filtering and Smoothing} (Second Edition).
+
     \end{itemize}
 \end{frame}
 
@@ -47,23 +48,23 @@
         \begin{column}{0.48\textwidth}
             \uncover<1->{
                 \centering
-                \textbf{State Transition Dynamics}
+                \textbf{\textcolor{blue!80!black}{Transition Model}}
                 \vspace{0.8em}
 
                 \begin{tikzpicture}[
                     every node/.style={font=\small},
-                    every edge/.style={draw, thick, -{Stealth[length=2.2mm]}}
+                    every edge/.style={draw, thick, blue!80!black, -{Stealth[length=2.2mm]}}
                     ]
                     \node (F) at (0,0) {Focused};
                     \node (D) at (2.5,0) {Distracted};
 
                     % Transitions between states
-                    \path (F) edge[bend left=25] node[above, font=\footnotesize] {$p$} (D);
-                    \path (D) edge[bend left=25] node[below, font=\footnotesize] {$p$} (F);
+                    \path (F) edge[bend left=25] node[above, font=\footnotesize, text=blue!80!black] {$p$} (D);
+                    \path (D) edge[bend left=25] node[below, font=\footnotesize, text=blue!80!black] {$p$} (F);
 
                     % Self-loops
-                    \path (F) edge[loop left, min distance=8mm] node[left, font=\footnotesize] {$1-p$} (F);
-                    \path (D) edge[loop right, min distance=8mm] node[right, font=\footnotesize] {$1-p$} (D);
+                    \path (F) edge[loop left, min distance=8mm] node[left, font=\footnotesize, text=blue!80!black] {$1-p$} (F);
+                    \path (D) edge[loop right, min distance=8mm] node[right, font=\footnotesize, text=blue!80!black] {$1-p$} (D);
                 \end{tikzpicture}
             }
         \end{column}
@@ -71,11 +72,11 @@
         \begin{column}{0.48\textwidth}
             \uncover<2->{
                 \centering
-                \textbf{Observation Probabilities}
+                \textbf{\textcolor{teal!90!black}{Observation Model}}
                 \vspace{0.6em}
                 \begin{align*}
-                    P(\text{Respond} \mid \text{Focused})    & = 0.9 \\
-                    P(\text{Respond} \mid \text{Distracted}) & = 0.5
+                    \textcolor{teal!90!black}{p(\text{Respond} \mid \text{Focused})}    & = \textcolor{teal!90!black}{0.9} \\
+                    \textcolor{teal!90!black}{p(\text{Respond} \mid \text{Distracted})} & = \textcolor{teal!90!black}{0.5}
                 \end{align*}
             }
         \end{column}
@@ -100,19 +101,19 @@
                     \node (h2) at (1.3, 1.2) {$h_2$};
                     \node (h3) at (2.6, 1.2) {$h_3$};
 
-                    % Chain transitions
-                    \path (h1) edge (h2);
-                    \path (h2) edge (h3);
+                    % Chain transitions (Transition Model: blue)
+                    \path (h1) edge[draw=blue!80!black] (h2);
+                    \path (h2) edge[draw=blue!80!black] (h3);
 
                     % Observations
                     \node (o1) at (0, 0) {$o_1$};
                     \node (o2) at (1.3, 0) {$o_2$};
                     \node (o3) at (2.6, 0) {$o_3$};
 
-                    % Vertical emission arrows
-                    \path (h1) edge (o1);
-                    \path (h2) edge (o2);
-                    \path (h3) edge (o3);
+                    % Vertical emission arrows (Observation Model: teal)
+                    \path (h1) edge[draw=teal!90!black] (o1);
+                    \path (h2) edge[draw=teal!90!black] (o2);
+                    \path (h3) edge[draw=teal!90!black] (o3);
 
                     % Labels on left
                     \node[left=0.2cm of h1, font=\footnotesize] {Hidden:};
@@ -140,8 +141,8 @@
 \begin{frame}{Law of Total Probability \& Bayes' Rule}
     \textbf{Law of Total Probability}
     \begin{align*}
-        P(A)                  & = \sum_{i} P(A \mid B_i) P(B_i)                                     \\
-        p(h_t \mid o_{1:t-1}) & = \int p(h_t \mid h_{t-1}) \, p(h_{t-1} \mid o_{1:t-1}) \, dh_{t-1}
+        P(A)                    & = \sum_{i} P(A \mid B_i) P(B_i)                           \\
+        p(h_{t+1} \mid o_{1:t}) & = \int p(h_{t+1} \mid h_t) \, p(h_t \mid o_{1:t}) \, dh_t
     \end{align*}
 
     \vspace{0.4em}
@@ -150,14 +151,43 @@
 
     \textbf{Bayes' Rule}
     \begin{align*}
-        P(A \mid B)         & = \frac{P(B \mid A) P(A)}{P(B)}                                          \\
-        p(h_t \mid o_{1:t}) & = \frac{p(o_t \mid h_t) \, p(h_t \mid o_{1:t-1})}{p(o_t \mid o_{1:t-1})}
+        P(A \mid B)               & = \frac{P(B \mid A) P(A)}{P(B)}                                                      \\
+        p(h_{t+1} \mid o_{1:t+1}) & = \frac{p(o_{t+1} \mid h_{t+1}) \, p(h_{t+1} \mid o_{1:t})}{p(o_{t+1} \mid o_{1:t})}
     \end{align*}
 \end{frame}
 
 
+% ------------------------------------------------------------------------------
+\begin{frame}{Recursive Bayesian Estimation}
+    \centering
+    % Transition arrow
+    \begin{tikzpicture}[
+        every node/.style={font=\large},
+        every edge/.style={draw, thick, -{Stealth[length=2.5mm]}}
+        ]
+        \node (curr) at (0, 0) {$p(h_t \mid o_{1:t})$};
+        \node (next) at (6, 0) {$p(h_{t+1} \mid o_{1:t+1})$};
 
+        \path (curr) edge node[above=0.2cm, font=\normalsize\bfseries] {Recursive Bayesian Estimation} (next);
+    \end{tikzpicture}
 
+    \vspace{0.8em}
 
+    \raggedright
+    \textbf{1. Prediction Step} {\footnotesize (Law of Total Probability)}
+    \[
+        \overbrace{p(h_{t+1} \mid o_{1:t})}^{\text{Predicted Belief}} = \int \overbrace{\textcolor{blue!80!black}{p(h_{t+1} \mid h_t)}}^{\text{\textcolor{blue!80!black}{Transition Model}}} \, p(h_t \mid o_{1:t}) \, dh_t
+    \]
+
+    \vspace{0.3em}
+
+    \textbf{2. Update Step} {\footnotesize (Bayes' Rule)}
+    \vspace{-1.8em}
+    \begin{align*}
+        p(h_{t+1} \mid o_{1:t+1})
+         & = \frac{\overbrace{\textcolor{teal!90!black}{p(o_{t+1} \mid h_{t+1})}}^{\text{\textcolor{teal!90!black}{Observation Model}}} \, p(h_{t+1} \mid o_{1:t})}{p(o_{t+1} \mid o_{1:t})} \\[0.5em]
+         & = \frac{\textcolor{teal!90!black}{p(o_{t+1} \mid h_{t+1})} \, p(h_{t+1} \mid o_{1:t})}{\int \textcolor{teal!90!black}{p(o_{t+1} \mid h_{t+1})} \, p(h_{t+1} \mid o_{1:t}) \, dh_{t+1}}
+    \end{align*}
+\end{frame}
 %
 \end{document}
