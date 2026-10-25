@@ -459,6 +459,46 @@
             \end{itemize}
         \end{column}
     \end{columns}
-
 \end{frame}
+
+% ------------------------------------------------------------------------------
+\begin{frame}{Bayesian Bandit: Worker Selection}
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.48\textwidth}
+            \textbf{2 Workers ($i \in \{1, 2\}$)}
+            \begin{itemize}
+                \item Fixed state: $h^{(i)} \in \{\text{Focused}, \text{Distracted}\}$
+                \item Prior: $p(h^{(i)} = \text{Focused}) = 0.5$
+                \item Action: hire worker $a_t \in \{1, 2\}$
+            \end{itemize}
+        \end{column}
+
+        \begin{column}{0.48\textwidth}
+            \textbf{Observation ($o_t \in \{0, 1\}$)}
+            \begin{itemize}
+                \item $p(o_t = 1 \mid \text{Focused}) = 0.9$
+                \item $p(o_t = 1 \mid \text{Distracted}) = 0.5$
+                \item Unhired worker provides no observation
+            \end{itemize}
+        \end{column}
+    \end{columns}
+
+    \vspace{0.6em}
+    \hrule
+    \vspace{0.6em}
+
+    \textbf{Belief MDP}
+    \begin{itemize}
+        \item State: continuous belief $b_t = (b_t^{(1)}, b_t^{(2)}) \in [0, 1]^2$.
+        \item Bayes-optimal via Value Iteration:
+        \[
+            V^*(b) = \max_{a} \Big\{ \rho(b, a) + \gamma \sum_o p(o \mid b, a) \, V^*(\tau(b, a, o)) \Big\}
+        \]
+        \vspace{-1.5em}
+        \item \textbf{Bottleneck}: coupled continuous DP is intractable for large $K$.
+        \item \textbf{Gittins Index} (summer school): decouples into 1D indices for each worker!
+    \end{itemize}
+\end{frame}
+
+% here we talk about the connection between bayesian bandits and stochastic bandits we cite tor latimore
 \end{document}
