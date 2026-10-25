@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recursive Bayesian Estimation - Live Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-page: #090d16;
+            --bg-card: #131b2e;
+            --border: #23304a;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+
+            /* State Colors */
+            --color-focused: #38bdf8;
+            --color-focused-bg: rgba(56, 189, 248, 0.15);
+            --color-distracted: #fb923c;
+            --color-distracted-bg: rgba(251, 146, 60, 0.15);
+
+            /* Observation Colors */
+            --color-resp: #34d399;
+            --color-resp-bg: rgba(52, 211, 153, 0.15);
+            --color-no-resp: #f43f5e;
+            --color-no-resp-bg: rgba(244, 63, 94, 0.15);
+
+            --color-true-ground: #a855f7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100vh;
+            overflow: hidden;
+            /* Fits entirely on screen without page scroll */
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            padding: 0.85rem 1.25rem;
+            gap: 0.65rem;
+        }
+
+        header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: var(--text-sub);
+            font-size: 0.85rem;
+        }
+
+        /* 2-Column Full Screen Layout */
+        .app-layout {
+            display: grid;
+            grid-template-columns: 290px 1fr;
+            gap: 0.9rem;
+            flex: 1;
+            min-height: 0;
+            /* Important for flex/grid shrink */
+        }
+
+        .panel {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.85rem 1rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .panel-title {
+            font-size: 0.88rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        /* Left Sidebar: Controls */
+        .controls-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
+            justify-content: space-between;
+        }
+
+        .control-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .section-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-sub);
+        }
+
+        .btn-col {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        button {
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            width: 100%;
+        }
+
+        .btn-auto {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            color: white;
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-auto.active {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+            animation: pulseBtn 1.5s infinite;
+        }
+
+        @keyframes pulseBtn {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.85;
+            }
+        }
+
+        .btn-obs-yes {
+            background: var(--color-resp-bg);
+            color: var(--color-resp);
+            border-color: rgba(52, 211, 153, 0.4);
+        }
+
+        .btn-obs-yes:hover {
+            background: rgba(52, 211, 153, 0.25);
+        }
+
+        .btn-obs-no {
+            background: var(--color-no-resp-bg);
+            color: var(--color-no-resp);
+            border-color: rgba(244, 63, 94, 0.4);
+        }
+
+        .btn-obs-no:hover {
+            background: rgba(244, 63, 94, 0.25);
+        }
+
+        .btn-step {
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--color-focused);
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .btn-step:hover {
+            background: rgba(56, 189, 248, 0.22);
+        }
+
+        .btn-reset {
+            background: transparent;
+            color: var(--text-sub);
+            border-color: var(--border);
+        }
+
+        .btn-reset:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-main);
+        }
+
+        .param-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.5rem 0.65rem;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .param-field-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            color: var(--text-sub);
+        }
+
+        input[type="range"] {
+            accent-color: var(--color-focused);
+            cursor: pointer;
+            height: 4px;
+            background: #23304a;
+            border-radius: 2px;
+            width: 100%;
+        }
+
+        /* Right Content Area */
+        .right-area {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: 0.75rem;
+            min-height: 0;
+        }
+
+        /* SVG Chain visualization */
+        .chain-box {
+            overflow: hidden;
+            background: #0b1120;
+            border-radius: 8px;
+            padding: 0.4rem 0.6rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: center;
+        }
+
+        svg.chain-svg {
+            display: block;
+            width: 100%;
+            height: 125px;
+        }
+
+        /* Running Graph Canvas */
+        .canvas-card {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            flex: 1;
+        }
+
+        .canvas-container {
+            width: 100%;
+            flex: 1;
+            min-height: 160px;
+            position: relative;
+            background: #0b1120;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Status bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0e1526;
+            border-radius: 8px;
+            padding: 0.55rem 0.85rem;
+            font-size: 0.8rem;
+            font-family: 'Fira Code', monospace;
+            border: 1px solid var(--border);
+        }
+
+        .badge-pill {
+            padding: 0.1rem 0.45rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .legend-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.75rem;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .legend-line {
+            width: 14px;
+            height: 3px;
+            border-radius: 2px;
+            display: inline-block;
+        }
+
+        .legend-dashed {
+            width: 14px;
+            height: 0px;
+            border-top: 2px dashed;
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Recursive Bayesian Estimation</h1>
+        <p class="subtitle">Live Filter Tracking Hidden State $h_t$ (Focused vs. Distracted)</p>
+    </header>
+
+    <div class="app-layout">
+        <!-- LEFT: Control Panel Sidebar -->
+        <div class="panel controls-sidebar">
+            <div class="control-section">
+                <span class="section-label">Simulation Mode</span>
+                <div class="btn-col">
+                    <button class="btn-auto" id="btnAuto">
+                        <span id="autoIcon">&#9658;</span> <span id="autoText">Auto Simulate</span>
+                    </button>
+                    <button class="btn-step" id="btnSim">
+                        <span>&#8634;</span> Single Step
+                    </button>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <span class="section-label">Manual Observations</span>
+                <div class="btn-col">
+                    <button class="btn-obs-yes" id="btnYes">
+                        <span>&#10003;</span> Force Responded
+                    </button>
+                    <button class="btn-obs-no" id="btnNo">
+                        <span>&#10007;</span> Force No Response
+                    </button>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <span class="section-label">Parameters</span>
+
+                <div class="param-field">
+                    <div class="param-field-header">
+                        <span>Sim Speed:</span>
+                        <span id="speedLabel"
+                            style="color: var(--color-focused); font-family: 'Fira Code', monospace;">2.0 /s</span>
+                    </div>
+                    <input type="range" id="simSpeed" min="0.2" max="50" step="0.2" value="2">
+                </div>
+
+                <div class="param-field">
+                    <div class="param-field-header">
+                        <span>Transition $p$:</span>
+                        <span id="labelP"
+                            style="color: var(--color-focused); font-family: 'Fira Code', monospace;">0.300</span>
+                    </div>
+                    <input type="range" id="paramP" min="-3" max="-0.301" step="0.02" value="-0.523">
+                </div>
+
+                <div class="param-field">
+                    <div class="param-field-header">
+                        <span>History Window:</span>
+                        <span id="windowLabel"
+                            style="color: var(--color-focused); font-family: 'Fira Code', monospace;">30 pts</span>
+                    </div>
+                    <input type="range" id="windowSlider" min="5" max="500" step="5" value="30">
+                </div>
+            </div>
+
+            <div>
+                <button class="btn-reset" id="btnReset">Reset Simulation</button>
+            </div>
+        </div>
+
+        <!-- RIGHT: Visualizations Area -->
+        <div class="right-area">
+            <!-- 1. Hidden Markov Chain Visualizer -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                            <path d="M2 12h20" />
+                        </svg>
+                        Hidden Markov Chain
+                    </span>
+                    <div style="display: flex; gap: 0.6rem; font-size: 0.75rem;">
+                        <span class="legend-tag"><span class="badge-pill"
+                                style="background: var(--color-focused-bg); color: var(--color-focused); border: 1px solid var(--color-focused);">Focused</span>
+                            True $h_t$</span>
+                        <span class="legend-tag"><span class="badge-pill"
+                                style="background: var(--color-distracted-bg); color: var(--color-distracted); border: 1px solid var(--color-distracted);">Distracted</span>
+                            True $h_t$</span>
+                        <span class="legend-tag"><span class="badge-pill"
+                                style="background: var(--color-resp-bg); color: var(--color-resp);">Resp</span>
+                            $o_t$</span>
+                        <span class="legend-tag"><span class="badge-pill"
+                                style="background: var(--color-no-resp-bg); color: var(--color-no-resp);">~Resp</span>
+                            $o_t$</span>
+                    </div>
+                </div>
+
+                <div class="chain-box">
+                    <svg class="chain-svg" id="chainSvg" viewBox="0 0 860 125">
+                        <!-- Dynamic SVG content -->
+                    </svg>
+                </div>
+            </div>
+
+            <!-- 2. Running Graph -->
+            <div class="panel canvas-card">
+                <div class="panel-header">
+                    <span class="panel-title">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                        </svg>
+                        Belief State $P(\text{Focused} \mid o_{1:t})$ vs. True Hidden State
+                    </span>
+                    <div style="display: flex; gap: 1rem;">
+                        <span class="legend-tag">
+                            <span class="legend-line" style="background: var(--color-focused);"></span> Estimated
+                            $P(\text{Focused})$
+                        </span>
+                        <span class="legend-tag">
+                            <span class="legend-dashed" style="border-color: var(--color-true-ground);"></span>
+                            <strong style="color: var(--color-true-ground);">True State</strong> (1=F, 0=D)
+                        </span>
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="beliefCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- 3. Status Bar -->
+            <div class="status-bar">
+                <div>
+                    <span>Step:</span>
+                    <strong id="statT" style="color: var(--text-main);">t = 0</strong>
+                </div>
+                <div>
+                    <span>True State:</span>
+                    <span id="statTrue" class="badge-pill"
+                        style="background: var(--color-focused-bg); color: var(--color-focused);">Focused</span>
+                </div>
+                <div>
+                    <span>Latest Observation:</span>
+                    <span id="statObs" style="color: var(--text-sub);">Prior (None)</span>
+                </div>
+                <div>
+                    <span>Belief:</span>
+                    <strong id="statBelief" style="color: var(--color-focused);">P(F)=0.500 | P(D)=0.500</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Parameters & State
+        let p_trans = 0.30;
+        let t = 0;
+        let beliefF = 0.50; // Filter's probability of Focused
+        let trueState = 'Focused'; // Ground truth state (Focused or Distracted)
+
+        // Trajectory History for Graph and Chain
+        let history = [
+            { t: 0, obs: 'Start', beliefF: 0.50, trueState: 'Focused' }
+        ];
+
+        let autoInterval = null;
+        let autoSpeed = 500; // 2.0 steps/sec
+
+        // DOM elements
+        const chainSvg = document.getElementById('chainSvg');
+        const canvas = document.getElementById('beliefCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const btnAuto = document.getElementById('btnAuto');
+        const autoIcon = document.getElementById('autoIcon');
+        const autoText = document.getElementById('autoText');
+        const btnSim = document.getElementById('btnSim');
+        const btnYes = document.getElementById('btnYes');
+        const btnNo = document.getElementById('btnNo');
+        const btnReset = document.getElementById('btnReset');
+
+        const paramPSlider = document.getElementById('paramP');
+        const labelP = document.getElementById('labelP');
+        const simSpeedSlider = document.getElementById('simSpeed');
+        const speedLabel = document.getElementById('speedLabel');
+        const windowSlider = document.getElementById('windowSlider');
+        const windowLabel = document.getElementById('windowLabel');
+        let historyWindowSize = 30;
+
+        const statT = document.getElementById('statT');
+        const statTrue = document.getElementById('statTrue');
+        const statObs = document.getElementById('statObs');
+        const statBelief = document.getElementById('statBelief');
+
+        // Parameter Sliders
+        windowSlider.addEventListener('input', (e) => {
+            historyWindowSize = parseInt(e.target.value);
+            windowLabel.textContent = `${historyWindowSize} pts`;
+            drawGraph();
+        });
+
+        paramPSlider.addEventListener('input', (e) => {
+            const logVal = parseFloat(e.target.value);
+            p_trans = Math.pow(10, logVal);
+            labelP.textContent = p_trans < 0.01 ? p_trans.toFixed(4) : p_trans.toFixed(3);
+        });
+
+        simSpeedSlider.addEventListener('input', (e) => {
+            const stepsPerSec = parseFloat(e.target.value);
+            speedLabel.textContent = `${stepsPerSec.toFixed(1)} /s`;
+            autoSpeed = Math.round(1000 / stepsPerSec);
+            if (autoInterval) {
+                clearInterval(autoInterval);
+                autoInterval = setInterval(simulateStep, autoSpeed);
+            }
+        });
+
+        // Resize Canvas with Retina/HiDPI support
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            drawGraph();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        // Core Bayesian Filter Step
+        function updateFilter(observation, actualTrueState) {
+            // 1. PREDICTION STEP (Law of Total Probability)
+            const predF = (1 - p_trans) * beliefF + p_trans * (1 - beliefF);
+            const predD = 1 - predF;
+
+            // 2. OBSERVATION MODEL LIKELIHOODS
+            let likF, likD;
+            if (observation === 'Respond') {
+                likF = 0.90;
+                likD = 0.50;
+            } else {
+                likF = 0.10;
+                likD = 0.50;
+            }
+
+            // Evidence Normalizer
+            const evidence = (likF * predF) + (likD * predD);
+
+            // 3. UPDATE STEP (Bayes' Rule)
+            beliefF = (likF * predF) / evidence;
+            t++;
+
+            history.push({
+                t: t,
+                obs: observation,
+                beliefF: beliefF,
+                trueState: actualTrueState
+            });
+
+            // Update stats
+            statT.textContent = `t = ${t}`;
+            if (actualTrueState === 'Focused') {
+                statTrue.className = 'badge-pill';
+                statTrue.style.background = 'var(--color-focused-bg)';
+                statTrue.style.color = 'var(--color-focused)';
+                statTrue.textContent = 'Focused';
+            } else {
+                statTrue.className = 'badge-pill';
+                statTrue.style.background = 'var(--color-distracted-bg)';
+                statTrue.style.color = 'var(--color-distracted)';
+                statTrue.textContent = 'Distracted';
+            }
+
+            statObs.innerHTML = `<span class="badge-pill" style="background: ${observation === 'Respond' ? 'var(--color-resp-bg)' : 'var(--color-no-resp-bg)'}; color: ${observation === 'Respond' ? 'var(--color-resp)' : 'var(--color-no-resp)'};">${observation === 'Respond' ? 'Responded' : 'No Response'}</span>`;
+            statBelief.innerHTML = `P(F)=<strong style="color:var(--color-focused)">${beliefF.toFixed(3)}</strong> | P(D)=<strong style="color:var(--color-distracted)">${(1 - beliefF).toFixed(3)}</strong>`;
+
+            drawChain();
+            drawGraph();
+        }
+
+        // Simulate True Process step
+        function simulateStep() {
+            if (trueState === 'Focused' && Math.random() < p_trans) {
+                trueState = 'Distracted';
+            } else if (trueState === 'Distracted' && Math.random() < p_trans) {
+                trueState = 'Focused';
+            }
+
+            const obs = (trueState === 'Focused')
+                ? (Math.random() < 0.90 ? 'Respond' : 'No Response')
+                : (Math.random() < 0.50 ? 'Respond' : 'No Response');
+
+            updateFilter(obs, trueState);
+        }
+
+        function manualStep(forcedObs) {
+            if (trueState === 'Focused' && Math.random() < p_trans) {
+                trueState = 'Distracted';
+            } else if (trueState === 'Distracted' && Math.random() < p_trans) {
+                trueState = 'Focused';
+            }
+            updateFilter(forcedObs, trueState);
+        }
+
+        function toggleAuto() {
+            if (autoInterval) {
+                clearInterval(autoInterval);
+                autoInterval = null;
+                btnAuto.classList.remove('active');
+                autoIcon.innerHTML = '&#9658;';
+                autoText.textContent = 'Auto Simulate';
+            } else {
+                autoInterval = setInterval(simulateStep, autoSpeed);
+                btnAuto.classList.add('active');
+                autoIcon.innerHTML = '&#9632;';
+                autoText.textContent = 'Pause Auto';
+            }
+        }
+
+        function reset() {
+            if (autoInterval) toggleAuto();
+
+            t = 0;
+            beliefF = 0.50;
+            trueState = 'Focused';
+            history = [{ t: 0, obs: 'Start', beliefF: 0.50, trueState: 'Focused' }];
+
+            statT.textContent = `t = 0`;
+            statTrue.className = 'badge-pill';
+            statTrue.style.background = 'var(--color-focused-bg)';
+            statTrue.style.color = 'var(--color-focused)';
+            statTrue.textContent = 'Focused';
+            statObs.textContent = `Prior (None)`;
+            statBelief.innerHTML = `P(F)=0.500 | P(D)=0.500`;
+
+            drawChain();
+            drawGraph();
+        }
+
+        // Draw Hidden Markov Chain Diagram
+        function drawChain() {
+            const maxNodes = 7;
+            const startIdx = Math.max(0, history.length - maxNodes);
+            const visibleHistory = history.slice(startIdx);
+
+            const nodeCount = visibleHistory.length;
+            const svgWidth = 860;
+            const nodeSpacing = (svgWidth - 130) / Math.max(maxNodes - 1, 1);
+            const startX = 100;
+            const yHidden = 34;
+            const yObs = 92;
+
+            let html = `
+                <defs>
+                    <marker id="arrowBlue" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                        <polygon points="0 0, 7 3.5, 0 7" fill="#38bdf8" />
+                    </marker>
+                    <marker id="arrowTeal" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                        <polygon points="0 0, 7 3.5, 0 7" fill="#2dd4bf" />
+                    </marker>
+                </defs>
+                <text x="15" y="${yHidden + 4}" fill="#94a3b8" font-size="11" font-weight="600" text-anchor="start">Hidden $h_t$:</text>
+                <text x="15" y="${yObs + 4}" fill="#94a3b8" font-size="11" font-weight="600" text-anchor="start">Observe $o_t$:</text>
+            `;
+
+            for (let i = 0; i < nodeCount; i++) {
+                const item = visibleHistory[i];
+                const cx = startX + i * nodeSpacing;
+
+                const isFocused = (item.trueState === 'Focused');
+                const nodeColor = isFocused ? '#38bdf8' : '#fb923c';
+                const nodeFill = isFocused ? 'rgba(56, 189, 248, 0.20)' : 'rgba(251, 146, 60, 0.20)';
+
+                if (i < nodeCount - 1) {
+                    const nextX = startX + (i + 1) * nodeSpacing;
+                    html += `
+                        <line x1="${cx + 18}" y1="${yHidden}" x2="${nextX - 20}" y2="${yHidden}" 
+                              stroke="#38bdf8" stroke-width="2" marker-end="url(#arrowBlue)" />
+                    `;
+                }
+
+                html += `
+                    <line x1="${cx}" y1="${yHidden + 18}" x2="${cx}" y2="${yObs - 18}" 
+                          stroke="#2dd4bf" stroke-width="2" marker-end="url(#arrowTeal)" />
+                `;
+
+                const isCurrent = (i === nodeCount - 1);
+                const halo = isCurrent ? `stroke="${nodeColor}" stroke-width="2.5" stroke-dasharray="2,2"` : `stroke="${nodeColor}" stroke-width="1.8"`;
+
+                html += `
+                    <circle cx="${cx}" cy="${yHidden}" r="17" fill="${nodeFill}" ${halo} />
+                    <text x="${cx}" y="${yHidden - 2}" fill="#f8fafc" font-size="10" font-weight="700" text-anchor="middle" font-family="'Fira Code', monospace">h${item.t}</text>
+                    <text x="${cx}" y="${yHidden + 9}" fill="${nodeColor}" font-size="8" font-weight="600" text-anchor="middle">${isFocused ? 'FOC' : 'DIS'}</text>
+                `;
+
+                let obsLabel = `o${item.t}`;
+                let obsColor = '#64748b';
+                let obsBg = 'rgba(100, 116, 139, 0.15)';
+                let obsSubText = '-';
+
+                if (item.obs === 'Respond') {
+                    obsColor = '#34d399';
+                    obsBg = 'rgba(52, 211, 153, 0.20)';
+                    obsSubText = 'Resp';
+                } else if (item.obs === 'No Response') {
+                    obsColor = '#f43f5e';
+                    obsBg = 'rgba(244, 63, 94, 0.20)';
+                    obsSubText = '~Resp';
+                }
+
+                html += `
+                    <circle cx="${cx}" cy="${yObs}" r="17" fill="${obsBg}" stroke="${obsColor}" stroke-width="1.8" />
+                    <text x="${cx}" y="${yObs - 2}" fill="#f8fafc" font-size="10" font-weight="700" text-anchor="middle" font-family="'Fira Code', monospace">${obsLabel}</text>
+                    <text x="${cx}" y="${yObs + 9}" fill="${obsColor}" font-size="8" font-weight="600" text-anchor="middle">${obsSubText}</text>
+                `;
+            }
+
+            chainSvg.innerHTML = html;
+        }
+
+        // Draw Running Graph of Belief State vs True State
+        function drawGraph() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const width = rect.width;
+            const height = rect.height;
+
+            ctx.clearRect(0, 0, width, height);
+
+            const padLeft = 40;
+            const padRight = 20;
+            const padTop = 15;
+            const padBottom = 15;
+
+            const plotW = width - padLeft - padRight;
+            const plotH = height - padTop - padBottom;
+
+            // Background grid lines (0%, 25%, 50%, 75%, 100%)
+            ctx.lineWidth = 1;
+            ctx.font = "10px 'Fira Code', monospace";
+            ctx.fillStyle = "#64748b";
+
+            for (let p = 0; p <= 1; p += 0.25) {
+                const y = padTop + plotH * (1 - p);
+                ctx.strokeStyle = (p === 0.5) ? "rgba(255, 255, 255, 0.18)" : "rgba(255, 255, 255, 0.05)";
+                ctx.setLineDash((p === 0.5) ? [4, 4] : []);
+
+                ctx.beginPath();
+                ctx.moveTo(padLeft, y);
+                ctx.lineTo(width - padRight, y);
+                ctx.stroke();
+
+                ctx.fillText(`${Math.round(p * 100)}%`, 6, y + 4);
+            }
+            ctx.setLineDash([]);
+
+            if (history.length < 1) return;
+
+            const windowSize = historyWindowSize;
+            const startIdx = Math.max(0, history.length - windowSize);
+            const visibleHistory = history.slice(startIdx);
+            const totalSteps = Math.max(visibleHistory.length - 1, Math.min(windowSize, 10));
+
+            const getX = (visIdx) => padLeft + (visIdx / totalSteps) * plotW;
+            const getY = (prob) => padTop + plotH * (1 - prob);
+
+            // 1. DRAW TRUE GROUND TRUTH STEP FUNCTION (Purple Dashed Square Line)
+            ctx.beginPath();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "#a855f7";
+            ctx.setLineDash([5, 4]);
+
+            for (let i = 0; i < visibleHistory.length; i++) {
+                const x = getX(i);
+                const trueVal = (visibleHistory[i].trueState === 'Focused') ? 1.0 : 0.0;
+                const y = getY(trueVal);
+
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    const prevX = getX(i - 1);
+                    const prevTrueVal = (visibleHistory[i - 1].trueState === 'Focused') ? 1.0 : 0.0;
+                    const prevY = getY(prevTrueVal);
+
+                    ctx.lineTo(x, prevY);
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 2. DRAW ESTIMATED P(Focused) (Sky Blue)
+            ctx.beginPath();
+            ctx.lineWidth = (visibleHistory.length > 100) ? 2 : 2.5;
+            ctx.strokeStyle = "#38bdf8";
+            for (let i = 0; i < visibleHistory.length; i++) {
+                const x = getX(i);
+                const y = getY(visibleHistory[i].beliefF);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Dots for P(Focused)
+            if (visibleHistory.length <= 80) {
+                for (let i = 0; i < visibleHistory.length; i++) {
+                    const x = getX(i);
+                    const yF = getY(visibleHistory[i].beliefF);
+
+                    ctx.fillStyle = "#38bdf8";
+                    ctx.beginPath();
+                    ctx.arc(x, yF, (i === visibleHistory.length - 1) ? 4.5 : 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else {
+                const lastIdx = visibleHistory.length - 1;
+                const x = getX(lastIdx);
+                const yF = getY(visibleHistory[lastIdx].beliefF);
+                ctx.fillStyle = "#38bdf8";
+                ctx.beginPath();
+                ctx.arc(x, yF, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Attach Event Listeners
+        btnAuto.addEventListener('click', toggleAuto);
+        btnSim.addEventListener('click', simulateStep);
+        btnYes.addEventListener('click', () => manualStep('Respond'));
+        btnNo.addEventListener('click', () => manualStep('No Response'));
+        btnReset.addEventListener('click', reset);
+
+        // Initial render
+        setTimeout(() => {
+            resizeCanvas();
+            drawChain();
+        }, 50);
+    </script>
+</body>
+
+</html>
