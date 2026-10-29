@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo 3: Random Functions via Chebyshev Polynomials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-page: #090d16;
+            --bg-card: #131b2e;
+            --border: #23304a;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+
+            --color-primary: #38bdf8;
+            --color-primary-glow: rgba(56, 189, 248, 0.25);
+            --color-accent: #a855f7;
+            --color-green: #34d399;
+            --color-amber: #fbbf24;
+            --color-rose: #f43f5e;
+            --color-blue: #60a5fa;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100vh;
+            overflow: hidden;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            padding: 0.75rem 1.2rem;
+            gap: 0.6rem;
+        }
+
+        header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            padding-bottom: 0.35rem;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: baseline;
+            gap: 0.75rem;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: var(--text-sub);
+            font-size: 0.8rem;
+        }
+
+        .nav-link {
+            font-size: 0.78rem;
+            color: var(--color-primary);
+            text-decoration: none;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            transition: all 0.15s;
+        }
+
+        .nav-link:hover {
+            background: rgba(56, 189, 248, 0.2);
+        }
+
+        /* 2-Column Full Screen Layout */
+        .app-layout {
+            display: grid;
+            grid-template-columns: 315px 1fr;
+            gap: 0.85rem;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .panel {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.75rem 0.9rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.45rem;
+            flex-shrink: 0;
+        }
+
+        .panel-title {
+            font-size: 0.86rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        /* Left Sidebar: Controls */
+        .controls-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+            overflow-y: auto;
+        }
+
+        .controls-sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .controls-sidebar::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .control-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .section-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-sub);
+        }
+
+        .btn-col {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .btn-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.4rem;
+        }
+
+        button {
+            font-family: inherit;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.42rem 0.6rem;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0284c7, #38bdf8);
+            color: #04101e;
+            box-shadow: 0 2px 8px var(--color-primary-glow);
+        }
+
+        .btn-primary:hover {
+            filter: brightness(1.12);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #1e293b;
+            color: var(--text-main);
+            border-color: var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #27354f;
+            border-color: #3b82f6;
+        }
+
+        .btn-accent {
+            background: rgba(168, 85, 247, 0.15);
+            color: #c084fc;
+            border-color: rgba(168, 85, 247, 0.35);
+        }
+
+        .btn-accent:hover {
+            background: rgba(168, 85, 247, 0.25);
+        }
+
+        .btn-active {
+            border-color: var(--color-primary) !important;
+            background: rgba(56, 189, 248, 0.18) !important;
+            color: var(--color-primary) !important;
+        }
+
+        .param-field {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.45rem 0.6rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .param-field-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.74rem;
+        }
+
+        .param-val {
+            font-family: 'Fira Code', monospace;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: #1e293b;
+            border-radius: 2px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            cursor: pointer;
+            box-shadow: 0 0 6px var(--color-primary);
+            transition: transform 0.1s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        select {
+            background: #0f172a;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 0.35rem 0.5rem;
+            font-size: 0.76rem;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+        }
+
+        select:focus {
+            border-color: var(--color-primary);
+        }
+
+        /* Right Content Area */
+        .main-display {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .canvas-card {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.65rem 0.85rem;
+        }
+
+        .canvas-card.primary-graph {
+            flex: 1.6;
+        }
+
+        .canvas-card.secondary-graph {
+            flex: 1.1;
+        }
+
+        .canvas-container {
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            position: relative;
+            background: #080d19;
+            border-radius: 7px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Status & Math Bar */
+        .status-bar {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 0.8rem;
+            align-items: center;
+            background: #0d1527;
+            border-radius: 8px;
+            padding: 0.45rem 0.85rem;
+            font-size: 0.76rem;
+            font-family: 'Fira Code', monospace;
+            border: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .badge-pill {
+            padding: 0.15rem 0.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            display: inline-block;
+        }
+
+        .badge-pill.blue {
+            background: rgba(56, 189, 248, 0.18);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        .badge-pill.purple {
+            background: rgba(168, 85, 247, 0.18);
+            color: #c084fc;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .badge-pill.green {
+            background: rgba(52, 211, 153, 0.18);
+            color: #34d399;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+        }
+
+        .legend-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.72rem;
+            font-family: 'Fira Code', monospace;
+            color: var(--text-sub);
+        }
+
+        .legend-line {
+            width: 14px;
+            height: 3px;
+            border-radius: 2px;
+            display: inline-block;
+        }
+
+        .math-banner {
+            background: rgba(14, 21, 38, 0.7);
+            border-left: 3px solid var(--color-primary);
+            padding: 0.35rem 0.6rem;
+            border-radius: 0 5px 5px 0;
+            font-size: 0.71rem;
+            font-family: 'Fira Code', monospace;
+            color: #cbd5e1;
+            line-height: 1.4;
+        }
+
+        .math-banner code {
+            color: #38bdf8;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.4rem;
+        }
+
+        .stat-box {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.35rem 0.5rem;
+            font-size: 0.72rem;
+        }
+
+        .stat-box-label {
+            color: var(--text-sub);
+            font-size: 0.65rem;
+            margin-bottom: 2px;
+        }
+
+        .stat-box-val {
+            font-family: 'Fira Code', monospace;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .toggle-group {
+            display: flex;
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .toggle-group button {
+            flex: 1;
+            border-radius: 0;
+            border: none;
+            background: transparent;
+            color: var(--text-sub);
+            padding: 0.35rem;
+            font-size: 0.72rem;
+        }
+
+        .toggle-group button.active {
+            background: var(--color-primary);
+            color: #04101e;
+            font-weight: 700;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.74rem;
+            color: var(--text-sub);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checkbox-row input {
+            accent-color: var(--color-primary);
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-left">
+            <h1>Demo 3: Random Functions via Chebyshev Polynomials</h1>
+            <span class="subtitle">Continuum Priors on Non-Periodic Interval $x \in [-1, 1]$: $f(x) = \sum_{k=0}^K c_k a_k T_k(x)$</span>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <a href="demo.html" class="nav-link">&larr; Demo 1</a>
+            <a href="demo2.html" class="nav-link">&larr; Demo 2</a>
+        </div>
+    </header>
+
+    <div class="app-layout">
+        <!-- LEFT: Control Panel Sidebar -->
+        <div class="panel controls-sidebar">
+            <div class="control-section">
+                <span class="section-label">Chebyshev Kind</span>
+                <div class="toggle-group">
+                    <button id="kindT" class="active" onclick="setKind('T')">1st Kind $T_k(x)$</button>
+                    <button id="kindU" onclick="setKind('U')">2nd Kind $U_k(x)$</button>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <span class="section-label">Sampling Actions</span>
+                <div class="btn-col">
+                    <button class="btn-primary" id="btnResample" onclick="resampleAll()">
+                        <span>&#x21bb;</span> Resample Coefficients
+                    </button>
+                    <div class="btn-row">
+                        <button class="btn-secondary" id="btnAnimate" onclick="toggleAnimate()">
+                            <span id="animIcon">&#9658;</span> <span id="animText">Time Drift</span>
+                        </button>
+                        <button class="btn-accent" onclick="addSampleToEnsemble()">
+                            <span>+</span> Draw Path
+                        </button>
+                    </div>
+                    <button class="btn-secondary" onclick="clearEnsemble()" style="font-size: 0.72rem; padding: 0.3rem;">
+                        Clear Ensemble Paths
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mathematical Model Card -->
+            <div class="math-banner" id="mathDesc">
+                <code>f(x) = \sum_{k=0}^K c_k a_k T_k(x), \quad x \in [-1, 1]</code><br>
+                Coefficients: <code>a_k \sim \mathcal{N}(0, 1)</code> (Gaussian)<br>
+                Chebyshev Basis: <code>T_k(\cos \theta) = \cos(k\theta)</code><br>
+                Decay: <code>c_k = (1 + k)^{-\alpha}</code> (Spectral Smoothness)
+            </div>
+
+            <div class="control-section">
+                <span class="section-label">Polynomial &amp; Decay Controls</span>
+
+                <!-- Degree K -->
+                <div class="param-field">
+                    <div class="param-field-header">
+                        <span>Max Polynomial Degree ($K$):</span>
+                        <span class="param-val" id="valK">30</span>
+                    </div>
+                    <input type="range" id="paramK" min="1" max="80" step="1" value="30" oninput="updateParams()">
+                </div>
+
+                <!-- Smoothness decay alpha -->
+                <div class="param-field">
+                    <div class="param-field-header">
+                        <span>Smoothness Decay ($\alpha$):</span>
+                        <span class="param-val" id="valDecay">1.80</span>
+                    </div>
+                    <input type="range" id="paramDecay" min="0.0" max="4.0" step="0.05" value="1.80" oninput="updateParams()">
+                    <div style="font-size: 0.65rem; color: var(--text-sub); display: flex; justify-content: space-between;">
+                        <span>0: Rough/Jagged</span>
+                        <span>1.5: $C^1$</span>
+                        <span>3+: Analytic / Smooth</span>
+                    </div>
+                </div>
+
+                <!-- Signal Std Dev -->
+                <div class="param-field">
+                    <div class="param-field-header">
+                        <span>Signal Amplitude ($\sigma_f$):</span>
+                        <span class="param-val" id="valSigma">1.00</span>
+                    </div>
+                    <input type="range" id="paramSigma" min="0.2" max="3.0" step="0.1" value="1.0" oninput="updateParams()">
+                </div>
+
+                <!-- Coefficient Decay Profile -->
+                <div class="param-field">
+                    <div class="param-field-header">
+                        <span>Coefficient Decay Profile:</span>
+                    </div>
+                    <select id="decayProfile" onchange="updateParams()">
+                        <option value="algebraic">Algebraic: $(1+k)^{-\alpha}$</option>
+                        <option value="geometric">Geometric: $\rho^{-k}$ ($\rho = 1 + 0.1\alpha$)</option>
+                        <option value="gaussian">Gaussian: $\exp(-\alpha k^2 / 20)$</option>
+                        <option value="uniform">Uniform (No decay, $c_k = 1$)</option>
+                    </select>
+                </div>
+
+                <!-- Chebyshev Nodes Overlay Checkbox -->
+                <label class="checkbox-row" style="margin-top: 0.2rem;">
+                    <input type="checkbox" id="chkNodes" checked onchange="updateUI()">
+                    <span>Show Chebyshev Extrema / Roots nodes</span>
+                </label>
+            </div>
+
+            <!-- Diagnostics -->
+            <div class="stat-grid">
+                <div class="stat-box">
+                    <div class="stat-box-label">Ensemble Samples</div>
+                    <div class="stat-box-val" id="statEnsembleCount">1 path</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-box-label">Empirical Lipschitz L</div>
+                    <div class="stat-box-val" id="statLipschitz">0.00</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-box-label">Energy $\sum c_k^2$</div>
+                    <div class="stat-box-val" id="statEnergy">1.00</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-box-label">Domain Bounds</div>
+                    <div class="stat-box-val" id="statExtrema">[-1.0, 1.0]</div>
+                </div>
+            </div>
+
+            <div style="font-size: 0.65rem; color: #64748b; line-height: 1.35; padding: 0.2rem 0;">
+                &#9432; <strong>Clenshaw Algorithm</strong>: Evaluates $\sum c_k a_k T_k(x)$ in $\mathcal{O}(K)$ steps via Chebyshev 3-term recurrence: $T_{k+1}(x) = 2x T_k(x) - T_{k-1}(x)$.
+            </div>
+        </div>
+
+        <!-- RIGHT: Display Viewports (Split: Function Sample & Chebyshev Coefficients) -->
+        <div class="main-display">
+            <!-- TOP: Function Domain Graph f(x) on [-1, 1] -->
+            <div class="panel canvas-card primary-graph">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span style="color: var(--color-primary);">&#x223F;</span>
+                        <span id="domainHeaderTitle">Sampled Random Function $f(x)$ on Interval $x \in [-1, 1]$</span>
+                    </div>
+                    <div style="display: flex; gap: 0.8rem; align-items: center;">
+                        <span class="legend-tag">
+                            <span class="legend-line" style="background: var(--color-primary); height: 3px;"></span> Current $f(x)$
+                        </span>
+                        <span class="legend-tag">
+                            <span class="legend-line" style="background: rgba(168, 85, 247, 0.5); height: 2px;"></span> Ensemble Prior Paths
+                        </span>
+                        <span class="legend-tag">
+                            <span class="legend-line" style="background: rgba(52, 211, 153, 0.4); height: 1px; border-top: 1px dashed;"></span> $\pm 2\sigma$ Prior
+                        </span>
+                    </div>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="functionCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- BOTTOM: Chebyshev Coefficients Spectrum View -->
+            <div class="panel canvas-card secondary-graph">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span style="color: var(--color-accent);">&#9834;</span>
+                        <span>Chebyshev Spectral Coefficients $|c_k a_k|$ &amp; Envelope $c_k$</span>
+                    </div>
+                    <div style="display: flex; gap: 0.8rem; align-items: center;">
+                        <span class="legend-tag">
+                            <span class="legend-line" style="background: #a855f7;"></span> $|c_k a_k(t)|$ (Instantaneous)
+                        </span>
+                        <span class="legend-tag">
+                            <span class="legend-line" style="background: #38bdf8;"></span> Decay Envelope $c_k$
+                        </span>
+                    </div>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="spectralCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Status & Summary Bar -->
+            <div class="status-bar">
+                <div>
+                    <span class="badge-pill blue" id="statusPillKind">Chebyshev $T_k(x)$ (1st Kind)</span>
+                </div>
+                <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-sub);">
+                    <span>Formula: </span>
+                    <span style="color: #cbd5e1;" id="statusFormula">f(x) = &sum;_{k=0}^K c_k a_k T_k(x), x &in; [-1, 1]</span>
+                </div>
+                <div style="display: flex; gap: 0.8rem; font-size: 0.72rem;">
+                    <span>Grid Points: <strong style="color: var(--color-primary);">600</strong></span>
+                    <span>Domain: <strong style="color: var(--color-green);">[-1, 1]</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- State and Parameters ---
+        let chebyshevKind = 'T'; // 'T' or 'U'
+        let K = 30;
+        let alpha = 1.80;
+        let sigmaF = 1.0;
+        let decayProfile = 'algebraic';
+
+        // Chebyshev Gaussian coefficients: a_k ~ N(0, 1)
+        let ak = [];
+        let phaseK = [];
+
+        // Ensemble of sampled functions
+        let ensemblePaths = [];
+        const MAX_ENSEMBLE = 10;
+
+        // Animation state
+        let isAnimating = false;
+        let animTime = 0;
+        let animReqId = null;
+
+        // Gaussian Random Generator (Box-Muller)
+        function randn() {
+            let u = 0, v = 0;
+            while (u === 0) u = Math.random();
+            while (v === 0) v = Math.random();
+            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+
+        // Initialize / Resample Random Gaussian Coefficients
+        function resampleCoefficients() {
+            ak = [];
+            phaseK = [];
+            for (let k = 0; k <= K; k++) {
+                ak.push(randn());
+                phaseK.push(Math.random() * Math.PI * 2);
+            }
+        }
+
+        // Compute decay weight c_k
+        function getSpectralWeight(k) {
+            if (decayProfile === 'algebraic') {
+                return Math.pow(1 + k, -alpha);
+            } else if (decayProfile === 'geometric') {
+                const rho = 1.0 + 0.12 * Math.max(0.1, alpha);
+                return Math.pow(rho, -k);
+            } else if (decayProfile === 'gaussian') {
+                return Math.exp(-0.5 * alpha * Math.pow(k / 10, 2));
+            } else if (decayProfile === 'uniform') {
+                return 1.0;
+            }
+            return 1.0;
+        }
+
+        // Fast & Numerically Stable Clenshaw Algorithm for Chebyshev polynomial summation
+        // Evaluates f(x) = sum_{k=0}^K w_k P_k(x) where P_k is T_k or U_k
+        function evaluateChebyshevClenshaw(x, tOffset = 0) {
+            // w_k = c_k * a_k (with optional time drift modulation)
+            const weights = [];
+            let sumSq = 0;
+
+            for (let k = 0; k <= K; k++) {
+                const ck = getSpectralWeight(k);
+                const drift = tOffset > 0 ? Math.cos(phaseK[k] + tOffset * 0.7 * Math.sqrt(k + 1)) : 1.0;
+                const coeff = ck * ak[k] * drift;
+                weights.push(coeff);
+                sumSq += ck * ck;
+            }
+
+            // Normalization factor so std dev of f(x) roughly matches sigmaF
+            const norm = sumSq > 0 ? (sigmaF / Math.sqrt(sumSq)) : 1.0;
+
+            if (chebyshevKind === 'T') {
+                // Clenshaw recurrence for T_k(x):
+                // T_0 = 1, T_1 = x, T_{k+1} = 2x T_k - T_{k-1}
+                // b_{K+2} = 0, b_{K+1} = 0
+                // b_k = 2x b_{k+1} - b_{k+2} + w_k
+                // Result: f(x) = (w_0 + b_1 x - b_2) or standard b_0 - x b_1
+                let b1 = 0;
+                let b2 = 0;
+                for (let k = K; k >= 1; k--) {
+                    const b0 = 2 * x * b1 - b2 + weights[k];
+                    b2 = b1;
+                    b1 = b0;
+                }
+                const result = x * b1 - b2 + weights[0];
+                return result * norm;
+            } else {
+                // Chebyshev polynomial of the 2nd kind U_k(x):
+                // U_0 = 1, U_1 = 2x, U_{k+1} = 2x U_k - U_{k-1}
+                // Clenshaw: b_k = 2x b_{k+1} - b_{k+2} + w_k
+                // Result: f(x) = b_0 (with b_0 = 2x b_1 - b_2 + w_0)
+                let b1 = 0;
+                let b2 = 0;
+                for (let k = K; k >= 1; k--) {
+                    const b0 = 2 * x * b1 - b2 + weights[k];
+                    b2 = b1;
+                    b1 = b0;
+                }
+                const b0 = 2 * x * b1 - b2 + weights[0];
+                return b0 * norm;
+            }
+        }
+
+        // Generate discrete evaluations across grid [-1, 1]
+        function computeGridPoints(gridSize = 600, tOffset = 0) {
+            const points = [];
+            for (let i = 0; i < gridSize; i++) {
+                // Domain [-1, 1]
+                const x = -1.0 + (2.0 * i) / (gridSize - 1);
+                const y = evaluateChebyshevClenshaw(x, tOffset);
+                points.push({ x, y });
+            }
+            return points;
+        }
+
+        // Add current path to ensemble
+        function addSampleToEnsemble() {
+            const currentPath = computeGridPoints(400, animTime);
+            if (ensemblePaths.length >= MAX_ENSEMBLE) {
+                ensemblePaths.shift();
+            }
+            ensemblePaths.push(currentPath);
+            resampleCoefficients();
+            updateUI();
+        }
+
+        function clearEnsemble() {
+            ensemblePaths = [];
+            updateUI();
+        }
+
+        function resampleAll() {
+            resampleCoefficients();
+            updateUI();
+        }
+
+        // Kind Switching (T vs U)
+        function setKind(kind) {
+            chebyshevKind = kind;
+            document.getElementById('kindT').classList.toggle('active', kind === 'T');
+            document.getElementById('kindU').classList.toggle('active', kind === 'U');
+
+            const statusPill = document.getElementById('statusPillKind');
+            const mathDesc = document.getElementById('mathDesc');
+            const statusFormula = document.getElementById('statusFormula');
+
+            if (kind === 'T') {
+                statusPill.textContent = 'Chebyshev T_k(x) (1st Kind)';
+                statusPill.className = 'badge-pill blue';
+                statusFormula.innerHTML = 'f(x) = &sum;_{k=0}^K c_k a_k T_k(x), x &in; [-1, 1]';
+                mathDesc.innerHTML = '<code>f(x) = \\sum_{k=0}^K c_k a_k T_k(x), \\quad x \\in [-1, 1]</code><br>Coefficients: <code>a_k \\sim \\mathcal{N}(0, 1)</code><br>Chebyshev Basis: <code>T_k(\\cos \\theta) = \\cos(k\\theta)</code><br>3-Term Recurrence: <code>T_{k+1} = 2x T_k - T_{k-1}</code>';
+            } else {
+                statusPill.textContent = 'Chebyshev U_k(x) (2nd Kind)';
+                statusPill.className = 'badge-pill purple';
+                statusFormula.innerHTML = 'f(x) = &sum;_{k=0}^K c_k a_k U_k(x), x &in; [-1, 1]';
+                mathDesc.innerHTML = '<code>f(x) = \\sum_{k=0}^K c_k a_k U_k(x), \\quad x \\in [-1, 1]</code><br>Coefficients: <code>a_k \\sim \\mathcal{N}(0, 1)</code><br>Chebyshev Basis: <code>U_k(\\cos \\theta) = \\frac{\\sin((k+1)\\theta)}{\\sin \\theta}</code><br>Recurrence: <code>U_{k+1} = 2x U_k - U_{k-1}</code>';
+            }
+
+            resampleCoefficients();
+            updateUI();
+        }
+
+        // Animation Loop for Smooth Drift
+        function toggleAnimate() {
+            isAnimating = !isAnimating;
+            const btn = document.getElementById('btnAnimate');
+            const icon = document.getElementById('animIcon');
+            const text = document.getElementById('animText');
+
+            if (isAnimating) {
+                btn.classList.add('btn-active');
+                icon.innerHTML = '&#9646;&#9646;';
+                text.textContent = 'Pause Drift';
+                lastTimestamp = performance.now();
+                animateLoop(lastTimestamp);
+            } else {
+                btn.classList.remove('btn-active');
+                icon.innerHTML = '&#9658;';
+                text.textContent = 'Time Drift';
+                if (animReqId) cancelAnimationFrame(animReqId);
+            }
+        }
+
+        let lastTimestamp = 0;
+        function animateLoop(now) {
+            if (!isAnimating) return;
+            const dt = (now - lastTimestamp) / 1000;
+            lastTimestamp = now;
+            animTime += dt * 1.6;
+
+            drawFunctionCanvas();
+            drawSpectralCanvas();
+            animReqId = requestAnimationFrame(animateLoop);
+        }
+
+        // Parameter change listener
+        function updateParams() {
+            K = parseInt(document.getElementById('paramK').value, 10);
+            alpha = parseFloat(document.getElementById('paramDecay').value);
+            sigmaF = parseFloat(document.getElementById('paramSigma').value);
+            decayProfile = document.getElementById('decayProfile').value;
+
+            document.getElementById('valK').textContent = K;
+            document.getElementById('valDecay').textContent = alpha.toFixed(2);
+            document.getElementById('valSigma').textContent = sigmaF.toFixed(2);
+
+            resampleCoefficients();
+            updateUI();
+        }
+
+        // Draw Function Graph f(x) on [-1, 1]
+        function drawFunctionCanvas() {
+            const canvas = document.getElementById('functionCanvas');
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            if (canvas.width !== Math.floor(rect.width * dpr) || canvas.height !== Math.floor(rect.height * dpr)) {
+                canvas.width = Math.floor(rect.width * dpr);
+                canvas.height = Math.floor(rect.height * dpr);
+            }
+
+            const ctx = canvas.getContext('2d');
+            ctx.resetTransform();
+            ctx.scale(dpr, dpr);
+
+            const w = rect.width;
+            const h = rect.height;
+
+            // Background
+            ctx.fillStyle = '#080d19';
+            ctx.fillRect(0, 0, w, h);
+
+            // Padding
+            const padLeft = 45;
+            const padRight = 20;
+            const padTop = 20;
+            const padBottom = 30;
+            const plotW = w - padLeft - padRight;
+            const plotH = h - padTop - padBottom;
+
+            // X in [-1, 1]
+            const xMin = -1.0;
+            const xMax = 1.0;
+
+            // Y range auto-adjusted to sigmaF
+            const yMax = Math.max(2.5, 3.2 * sigmaF);
+            const yMin = -yMax;
+
+            const mapX = (x) => padLeft + ((x - xMin) / (xMax - xMin)) * plotW;
+            const mapY = (y) => padTop + plotH * (1 - (y - yMin) / (yMax - yMin));
+
+            // Grid lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+            ctx.lineWidth = 1;
+
+            // X ticks [-1.0, -0.5, 0.0, 0.5, 1.0]
+            const xTicks = [-1.0, -0.75, -0.5, -0.25, 0.0, 0.25, 0.5, 0.75, 1.0];
+            for (const xi of xTicks) {
+                const px = mapX(xi);
+                ctx.beginPath();
+                ctx.moveTo(px, padTop);
+                ctx.lineTo(px, padTop + plotH);
+                ctx.stroke();
+
+                ctx.fillStyle = '#64748b';
+                ctx.font = '10px "Fira Code", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(xi.toFixed(2), px, padTop + plotH + 15);
+            }
+
+            // Y ticks
+            const ySteps = [-2, -1, 0, 1, 2].map(v => v * sigmaF);
+            for (const yVal of ySteps) {
+                if (yVal < yMin || yVal > yMax) continue;
+                const py = mapY(yVal);
+                ctx.beginPath();
+                ctx.moveTo(padLeft, py);
+                ctx.lineTo(padLeft + plotW, py);
+                ctx.stroke();
+
+                ctx.fillStyle = '#64748b';
+                ctx.font = '10px "Fira Code", monospace';
+                ctx.textAlign = 'right';
+                ctx.fillText(yVal.toFixed(1), padLeft - 8, py + 3);
+            }
+
+            // X=0 and Y=0 axis lines
+            const xZero = mapX(0);
+            const yZero = mapY(0);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(padLeft, yZero);
+            ctx.lineTo(padLeft + plotW, yZero);
+            ctx.moveTo(xZero, padTop);
+            ctx.lineTo(xZero, padTop + plotH);
+            ctx.stroke();
+
+            // Theoretical +/- 2*sigma band
+            const pyTopBand = mapY(2 * sigmaF);
+            const pyBotBand = mapY(-2 * sigmaF);
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.04)';
+            ctx.fillRect(padLeft, pyTopBand, plotW, pyBotBand - pyTopBand);
+
+            ctx.strokeStyle = 'rgba(52, 211, 153, 0.35)';
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(padLeft, pyTopBand);
+            ctx.lineTo(padLeft + plotW, pyTopBand);
+            ctx.moveTo(padLeft, pyBotBand);
+            ctx.lineTo(padLeft + plotW, pyBotBand);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Overlay Chebyshev Nodes (Extrema / Lobatto nodes: cos(j*pi/K))
+            const showNodes = document.getElementById('chkNodes').checked;
+            if (showNodes && K <= 40) {
+                ctx.fillStyle = 'rgba(251, 191, 36, 0.18)';
+                ctx.strokeStyle = 'rgba(251, 191, 36, 0.4)';
+                for (let j = 0; j <= K; j++) {
+                    const nodeX = Math.cos((j * Math.PI) / K);
+                    const px = mapX(nodeX);
+                    ctx.beginPath();
+                    ctx.moveTo(px, padTop + plotH - 6);
+                    ctx.lineTo(px, padTop + plotH);
+                    ctx.stroke();
+                }
+            }
+
+            // Draw Ensemble Paths (prior functions)
+            for (let idx = 0; idx < ensemblePaths.length; idx++) {
+                const path = ensemblePaths[idx];
+                ctx.strokeStyle = `rgba(168, 85, 247, ${0.25 + 0.35 * (idx / ensemblePaths.length)})`;
+                ctx.lineWidth = 1.4;
+                ctx.beginPath();
+                for (let i = 0; i < path.length; i++) {
+                    const px = mapX(path[i].x);
+                    const py = mapY(path[i].y);
+                    if (i === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.stroke();
+            }
+
+            // Compute and Draw Active Function Sample f(x)
+            const gridPts = computeGridPoints(600, animTime);
+            let maxSlope = 0;
+            let minY = Infinity, maxY = -Infinity;
+
+            ctx.save();
+            ctx.shadowColor = 'rgba(56, 189, 248, 0.55)';
+            ctx.shadowBlur = 10;
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+
+            for (let i = 0; i < gridPts.length; i++) {
+                const pt = gridPts[i];
+                const px = mapX(pt.x);
+                const py = mapY(pt.y);
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+
+                if (pt.y < minY) minY = pt.y;
+                if (pt.y > maxY) maxY = pt.y;
+
+                if (i > 0) {
+                    const dx = Math.abs(pt.x - gridPts[i - 1].x);
+                    const dy = Math.abs(pt.y - gridPts[i - 1].y);
+                    const slope = dy / (dx || 0.001);
+                    if (slope > maxSlope) maxSlope = slope;
+                }
+            }
+            ctx.stroke();
+            ctx.restore();
+
+            // Label X and Y axis
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '11px Inter, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('f(x)', padLeft - 10, padTop - 5);
+            ctx.textAlign = 'center';
+            ctx.fillText('Domain Coordinate x \u2208 [-1, 1]', padLeft + plotW / 2, h - 5);
+
+            // Update stats
+            document.getElementById('statLipschitz').textContent = maxSlope.toFixed(1);
+            document.getElementById('statExtrema').textContent = `[${minY.toFixed(2)}, ${maxY.toFixed(2)}]`;
+            document.getElementById('statEnsembleCount').textContent = `${ensemblePaths.length + 1} path${ensemblePaths.length > 0 ? 's' : ''}`;
+        }
+
+        // Draw Chebyshev Spectral Coefficients Canvas
+        function drawSpectralCanvas() {
+            const canvas = document.getElementById('spectralCanvas');
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            if (canvas.width !== Math.floor(rect.width * dpr) || canvas.height !== Math.floor(rect.height * dpr)) {
+                canvas.width = Math.floor(rect.width * dpr);
+                canvas.height = Math.floor(rect.height * dpr);
+            }
+
+            const ctx = canvas.getContext('2d');
+            ctx.resetTransform();
+            ctx.scale(dpr, dpr);
+
+            const w = rect.width;
+            const h = rect.height;
+
+            ctx.fillStyle = '#080d19';
+            ctx.fillRect(0, 0, w, h);
+
+            const padLeft = 45;
+            const padRight = 20;
+            const padTop = 15;
+            const padBottom = 25;
+            const plotW = w - padLeft - padRight;
+            const plotH = h - padTop - padBottom;
+
+            const yBase = padTop + plotH;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padLeft, yBase);
+            ctx.lineTo(padLeft + plotW, yBase);
+            ctx.stroke();
+
+            const barCount = K + 1;
+            const step = plotW / barCount;
+            const barW = Math.max(2, step * 0.7);
+
+            let maxAmp = 0.001;
+            const amplitudes = [];
+            const envelopes = [];
+            let totalEnergy = 0;
+
+            for (let k = 0; k <= K; k++) {
+                const ck = getSpectralWeight(k);
+                const drift = animTime > 0 ? Math.cos(phaseK[k] + animTime * 0.7 * Math.sqrt(k + 1)) : 1.0;
+                const instantCoeff = ck * ak[k] * drift;
+                const amp = Math.abs(instantCoeff);
+                const env = ck * 1.5; // Theoretical ~1.5 std envelope
+                amplitudes.push(amp);
+                envelopes.push(env);
+                totalEnergy += instantCoeff * instantCoeff;
+                if (amp > maxAmp) maxAmp = amp;
+                if (env > maxAmp) maxAmp = env;
+            }
+
+            const yBound = Math.max(1.2, maxAmp * 1.15);
+
+            // Draw Bars for instantaneous |c_k a_k(t)|
+            for (let k = 0; k <= K; k++) {
+                const amp = amplitudes[k];
+                const px = padLeft + k * step + (step - barW) / 2;
+                const barH = (amp / yBound) * plotH;
+                const py = yBase - barH;
+
+                const grad = ctx.createLinearGradient(0, py, 0, yBase);
+                grad.addColorStop(0, '#c084fc');
+                grad.addColorStop(1, 'rgba(168, 85, 247, 0.2)');
+
+                ctx.fillStyle = grad;
+                ctx.fillRect(px, py, barW, barH);
+            }
+
+            // Draw Envelope Curve
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let k = 0; k <= K; k++) {
+                const px = padLeft + k * step + step / 2;
+                const py = yBase - (envelopes[k] / yBound) * plotH;
+                if (k === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+
+            // Ticks and labels
+            ctx.fillStyle = '#64748b';
+            ctx.font = '9px "Fira Code", monospace';
+            ctx.textAlign = 'center';
+            const tickInterval = Math.max(1, Math.ceil(K / 10));
+            for (let k = 0; k <= K; k += tickInterval) {
+                const px = padLeft + k * step + step / 2;
+                ctx.fillText(k, px, yBase + 14);
+            }
+
+            ctx.textAlign = 'right';
+            ctx.fillText(yBound.toFixed(1), padLeft - 8, padTop + 10);
+            ctx.fillText('0', padLeft - 8, yBase);
+            ctx.fillText('Coeff', padLeft - 8, padTop + plotH / 2);
+
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '10px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Chebyshev Degree k (Polynomial Order)', padLeft + plotW / 2, h - 3);
+
+            document.getElementById('statEnergy').textContent = totalEnergy.toFixed(2);
+        }
+
+        function updateUI() {
+            drawFunctionCanvas();
+            drawSpectralCanvas();
+        }
+
+        // Window resize responsiveness
+        window.addEventListener('resize', () => {
+            updateUI();
+        });
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            resampleCoefficients();
+            updateUI();
+        });
+    </script>
+</body>
+
+</html>

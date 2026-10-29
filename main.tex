@@ -589,46 +589,296 @@
     {\tiny \textcolor{gray}{Reference: \cite{london_machine_learning_meetup_noam_2021}}}
 \end{frame}
 
+
 % ------------------------------------------------------------------------------
-\begin{frame}{From Discrete Bandits to Continuous Domains}
+\begin{frame}{Bandits for Functions: From Discrete to Continuous}
+    \small
     \begin{columns}[T,onlytextwidth]
         \begin{column}{0.48\textwidth}
-            \textbf{\textcolor{blue!80!black}{Discrete Multi-Armed Bandit}}
+            \textbf{Discrete Multi-Armed Bandit}
             \begin{itemize}
-                \item Finite action set $a \in \{1, \dots, K\}$.
-                \item Independent reward distributions.
-                \item Belief: posterior statistics per arm.
-                \item Fails on continuous domains $\mathcal{X} \subset \mathbb{R}^d$.
+                \item Action set $a \in \{1, \dots, K\}$.
+                \item Independent arms: $y_t = \mu(a_t) + \epsilon_t$.
+                \item Sampling arm $a$ gives \textbf{no information} about any arm $a' \neq a$.
+                \item All arms can be evaluated in finite steps.
             \end{itemize}
         \end{column}
 
         \begin{column}{0.48\textwidth}
-            \textbf{\textcolor{teal!90!black}{Continuous Black-Box Setting}}
+            \textbf{Arbitrary Bounded $f: \mathbb{R} \to [0, 1]$}
             \begin{itemize}
-                \item Continuous domain $\mathcal{X} \subset \mathbb{R}^d$ ($\infty$ arms).
-                \item Objective: $\max_{x \in \mathcal{X}} f(x)$ with costly $f$.
-                \item Correlated: $x \approx x' \implies f(x) \approx f(x')$.
-                \item \textbf{Latent state}: the unknown function $f$.
+                \item Continuous domain $x \in \mathcal{X} \subset \mathbb{R}$.
+                \item Any bounded function: $y_t = f(x_t) + \epsilon_t$.
+                \item $\implies$ \textbf{$\infty$ independent arms}!
+                \item Querying $f(x)$ reveals \textbf{zero information} about $f(x')$ for $x' \neq x$.
             \end{itemize}
         \end{column}
     \end{columns}
 
-    \vspace{0.3em}
-    \hrule
     \vspace{0.25em}
-
-    \textbf{From Scalar Beliefs to Function Distributions}
+    \hrule
+    \vspace{0.2em}
+    \pause
     \begin{itemize}
-        \item We need a prior distribution over an infinite-dimensional space $\mathcal{F}$.
-        \item Closed-form recursive Bayesian conditioning $\implies$ \textbf{Gaussian Processes}!
+        \item There may exist a single spike arm $x^*$ with $f(x^*) = 1$, and $0$ elsewhere.
+        \item No learning is possible without \textbf{constraining the information / complexity} of $f$.
     \end{itemize}
 \end{frame}
 
 % ------------------------------------------------------------------------------
-\begin{frame}{Gaussian Processes: Priors over Functions}
+\begin{frame}{Lipschitz Bandits: Discretization Reduction}
+    \small
+    \textbf{Reduction via Discretization: $\infty$ Arms $\to$ Finite Arms}
+    \vspace{-0.4em}
+    \begin{itemize}
+        \item Lipschitz continuity $|f(x) - f(x')| \le L \|x - x'\|$ bounds variation in an $\epsilon$-ball.
+        \item Covering the domain with $K_\epsilon \sim \epsilon^{-d}$ points reduces continuous space to a \textbf{finite discrete bandit}.
+    \end{itemize}
+
+    \vspace{0.05em}
+    \centering
+    \begin{tikzpicture}[
+        every edge/.style={draw, thick, -{Stealth[length=2.0mm]}},
+        scale=0.83, every node/.style={transform shape}
+    ]
+        % Axes / Domain line
+        \draw[thick, ->] (0, 0) -- (10.5, 0) node[right, font=\footnotesize] {$\mathcal{X} \subset \mathbb{R}$};
+        
+        % Discretization regions (intervals of width 2*eps = 1.8)
+        \foreach \x/\label in {1.5/x_1, 3.5/x_2, 5.5/x_3, 7.5/x_4, 9.5/x_5} {
+            \draw[dashed, thin, fill=gray!8, fill opacity=0.7] (\x-0.9, 0) rectangle (\x+0.9, 2.3);
+
+            % Value at xi: fx = 1.1 + 0.4*sin(0.8*\x r)
+            \fill[blue!15, opacity=0.45] 
+                (\x, {1.1 + 0.4*sin(0.8*\x r)}) -- 
+                (\x+0.9, {1.1 + 0.4*sin(0.8*\x r) + 0.495}) -- 
+                (\x+0.9, {1.1 + 0.4*sin(0.8*\x r) - 0.495}) -- cycle;
+            \fill[blue!15, opacity=0.45] 
+                (\x, {1.1 + 0.4*sin(0.8*\x r)}) -- 
+                (\x-0.9, {1.1 + 0.4*sin(0.8*\x r) + 0.495}) -- 
+                (\x-0.9, {1.1 + 0.4*sin(0.8*\x r) - 0.495}) -- cycle;
+
+            % Lipschitz envelope cone lines
+            \draw[dotted, thick, blue!70!black] 
+                (\x-0.9, {1.1 + 0.4*sin(0.8*\x r) - 0.495}) -- 
+                (\x+0.9, {1.1 + 0.4*sin(0.8*\x r) + 0.495});
+            \draw[dotted, thick, blue!70!black] 
+                (\x-0.9, {1.1 + 0.4*sin(0.8*\x r) + 0.495}) -- 
+                (\x+0.9, {1.1 + 0.4*sin(0.8*\x r) - 0.495});
+
+            % Representative arm on x-axis
+            \filldraw (\x, 0) circle (2pt) node[below=2pt, font=\scriptsize] {$\label$};
+            % Sampled value point
+            \filldraw[blue!80!black] (\x, {1.1 + 0.4*sin(0.8*\x r)}) circle (1.8pt);
+        }
+
+        % Lipschitz function curve f(x)
+        \draw[very thick, smooth, domain=0.4:10.0, samples=80] 
+            plot (\x, {1.1 + 0.4*sin(0.8*\x r)});
+        \node[above right, font=\footnotesize] at (9.6, {1.1 + 0.4*sin(0.8*9.6 r)}) {$f(x)$};
+
+        % Bracket / label for epsilon
+        \draw[<->, thin] (0.6, -0.45) -- (2.4, -0.45) node[midway, below, font=\tiny] {$2\epsilon$};
+        \node[font=\tiny, blue!80!black] at (1.5, 2.38) {Lipschitz cone $f(x_i) \pm L|x - x_i|$};
+
+        % Reduction banner
+        \node[draw, rounded corners=2pt, fill=blue!8, inner sep=2.0pt, font=\scriptsize] (reduction) at (5.25, -0.90) {
+            Continuous space $\mathcal{X}$ $\xrightarrow{\quad\text{Cover with } \epsilon\text{-mesh}\quad}$ Discrete $K$-armed bandit ($K \approx \epsilon^{-d}$)
+        };
+    \end{tikzpicture}
+
+    \vspace{0.08em}
+    \hrule
+    \vspace{0.08em}
+    \begin{itemize}
+        \item \textbf{Trade-off}: Discretization bias ($L\epsilon$) vs.\ exploration cost ($\mathcal{O}(\sqrt{K T})$).
+        \item \textbf{Limitation}: Worst-case local bound; ignores global smoothness and correlations.
+        \item \textbf{Solution for Global Smoothness}: Treat $f$ as a \textbf{hidden state randomly drawn} from a prior distribution over functions.
+    \end{itemize}
+\end{frame}
+% ------------------------------------------------------------------------------
+\begin{frame}{Tractable Continuous Beliefs: Parametric Conjugacy}
+    \small
     \begin{columns}[T,onlytextwidth]
         \begin{column}{0.48\textwidth}
-            \textbf{\textcolor{blue!80!black}{Definition: $f \sim \mathcal{GP}(m, k)$}}
+            \textbf{Infinite Dims vs.\ Parameters}
+            \begin{itemize}
+                \item On continuous spaces, general beliefs $b(s)$ are infinite-dimensional densities.
+                \item Generic Bayes updates are intractable:
+                $b_{t+1}(s) \propto p(o_{t+1} \mid s) \, b_t(s)$.
+                \item \textbf{Parametric idea}: restrict belief to a family $b(s; \boldsymbol{\theta})$ with $\boldsymbol{\theta} \in \Theta \subset \mathbb{R}^m$.
+            \end{itemize}
+        \end{column}
+
+        \begin{column}{0.48\textwidth}
+            \textbf{Conjugacy $\implies$ Closed Updates}
+            \begin{itemize}
+                \item \textbf{Conjugacy}: prior $b_t \in \mathcal{P}_\Theta \implies$ posterior $b_{t+1} \in \mathcal{P}_\Theta$.
+                \item Infinite update collapses to \textbf{finite algebraic update}:
+                $\boldsymbol{\theta}_{t+1} = g(\boldsymbol{\theta}_t, a_t, o_{t+1})$.
+                \item Belief state becomes a finite-dimensional vector $\boldsymbol{\theta}_t \in \Theta$.
+            \end{itemize}
+        \end{column}
+    \end{columns}
+
+    \vspace{0.2em}
+    \hrule
+    \vspace{0.15em}
+
+    \textbf{Canonical Form: Linear-Gaussian Conjugacy (Kalman Filter)}
+    \begin{itemize}
+        \item Joint distribution $(s, o)$ is multivariate Gaussian.
+        \item \textbf{Conditioning keeps things Gaussian}: $s \mid o$ remains strictly Gaussian.
+        \item This direct Bayesian conditioning step is precisely the \textbf{Kalman filter}.
+        \item Belief update is exact and algebraic: only tracks mean $\boldsymbol{\mu}_t$ and covariance $\boldsymbol{\Sigma}_t$.
+    \end{itemize}
+\end{frame}
+% ------------------------------------------------------------------------------
+\begin{frame}{Random Functions via Gaussian Basis Expansion}
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.48\textwidth}
+            \textbf{Linear Combination of Basis}
+            \begin{itemize}
+                \item Expand unknown function $f$ over basis $\boldsymbol{\phi}(x) = [\phi_1(x), \dots, \phi_M(x)]^\top$:
+                \vspace{-0.3em}
+                \[
+                    f(x) = \sum_{m=1}^M w_m \phi_m(x) = \mathbf{w}^\top \boldsymbol{\phi}(x)
+                \]
+                \vspace{-0.5em}
+                \item Basis: Fourier harmonics, Chebyshev polynomials $T_m(x)$, or splines.
+                \item \textbf{Prior over weights}: $\mathbf{w} \sim \mathcal{N}(\mathbf{0}, \boldsymbol{\Sigma}_w)$.
+            \end{itemize}
+        \end{column}
+
+        \begin{column}{0.48\textwidth}
+            \textbf{Induced Gaussian Prior over $f$}
+            \begin{itemize}
+                \item Since linear transformations of Gaussians are Gaussian, for any $x, x'$:
+                \vspace{-0.3em}
+                \[
+                    \mathbb{E}[f(x)] = \mathbb{E}[\mathbf{w}]^\top \boldsymbol{\phi}(x) = 0
+                \]
+                \vspace{-0.5em}
+                \[
+                    \mathrm{Cov}(f(x), f(x')) = \boldsymbol{\phi}(x)^\top \boldsymbol{\Sigma}_w \boldsymbol{\phi}(x')
+                \]
+                \vspace{-0.5em}
+                \item Finite evaluations $[f(x_1), \dots, f(x_n)]^\top$ are \textbf{jointly Gaussian}.
+            \end{itemize}
+        \end{column}
+    \end{columns}
+
+\end{frame}
+% ------------------------------------------------------------------------------
+\begin{frame}{Recursive Bayesian Estimation: Function Observations}
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.48\textwidth}
+            \textbf{\textcolor{blue!80!black}{Prior}}
+            \begin{itemize}
+                \item Latent parameter: $h_t = \mathbf{w} \in \mathbb{R}^M$
+                \item Prior on functions: $f(x) = \boldsymbol{\phi}(x)^\top \mathbf{w}$.
+                \item Static hidden state: $\mathbf{w}_{t+1} = \mathbf{w}_t$.
+            \end{itemize}
+        \end{column}
+
+        \begin{column}{0.48\textwidth}
+            \textbf{\textcolor{teal!90!black}{Observation Model}}
+            \begin{itemize}
+                \item Probe at $x_t \implies o_t = (x_t, y_t)$:
+                \vspace{-0.7em}
+                \[
+                    y_t = f(x_t) + \varepsilon_t, \quad \varepsilon_t \sim \mathcal{N}(0, \sigma_n^2)
+                \]
+                \vspace{-1.5em}
+                \item Likelihood: $p(o_t \mid \mathbf{w}) = \mathcal{N}(y_t; \boldsymbol{\phi}(x_t)^\top \mathbf{w}, \sigma_n^2)$.
+            \end{itemize}
+        \end{column}
+    \end{columns}
+
+    \vspace{0.25em}
+    \hrule
+    \vspace{0.2em}
+
+    \textbf{Conjugate Gaussian Belief Update (Kalman Filter)}
+    \begin{itemize}
+        \item \textbf{Conjugacy}: Prior $b_{t-1}(\mathbf{w}) = \mathcal{N}(\boldsymbol{\mu}_{t-1}, \boldsymbol{\Sigma}_{t-1})$ and linear Gaussian likelihood $\textcolor{teal!90!black}{p(o_t \mid \mathbf{w})}$ yield an exact Gaussian posterior:
+        \vspace{-0.5em}
+        \[
+            b_t(\mathbf{w}) := p(\mathbf{w} \mid o_{1:t}) \propto \textcolor{teal!90!black}{p(o_t \mid \mathbf{w})} \, b_{t-1}(\mathbf{w}) = \mathcal{N}(\boldsymbol{\mu}_t, \boldsymbol{\Sigma}_t)
+        \]
+        \vspace{-1.8em}
+        \item Closed-form recursive update is the standard \textbf{Kalman filter} ($\mathcal{O}(M^2)$ cost).
+        \item \textbf{Function Posterior at $x^*$}: $f(x^*) \mid o_{1:t} \sim \mathcal{N}\big(\boldsymbol{\phi}(x^*)^\top \boldsymbol{\mu}_t, \, \boldsymbol{\phi}(x^*)^\top \boldsymbol{\Sigma}_t \boldsymbol{\phi}(x^*)\big)$.
+    \end{itemize}
+\end{frame}
+% ------------------------------------------------------------------------------
+\begin{frame}[t]{Bayesian Optimization: A POMDP over Function Space}
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.48\textwidth}
+            \textbf{POMDP Elements}
+            \begin{itemize}
+                \item \textbf{State} $s$: Unknown function $f$.
+                \item \textbf{Action} $a_t$: Query point $x_t \in \mathcal{X}$.
+                \item \textbf{Obs} $o_t$: $y_t = f(x_t) + \varepsilon_t$.
+                \item \textbf{Belief} $b_t$: Distribution over $f$.
+            \end{itemize}
+        \end{column}
+
+        \begin{column}{0.48\textwidth}
+            \uncover<2->{
+                \textbf{Representing $b_t(f)$}
+                \begin{itemize}
+                    \item \textbf{Basis expansion} (weight space):\\
+                    $f(x) = \boldsymbol{\phi}(x)^\top \mathbf{w}$, update via Kalman.
+                    \item \textbf{Kernel trick} (function space):\\
+                    Implicit infinite basis $\to$ \textbf{GP}.
+                \end{itemize}
+            }
+        \end{column}
+    \end{columns}
+
+    \uncover<3->{
+        \vspace{0.8em}
+        \hrule
+        \vspace{0.8em}
+
+        \begin{columns}[T,onlytextwidth]
+            \begin{column}{0.48\textwidth}
+                \textbf{Simple Regret (Pure Exploration)}
+                \vspace{-0.3em}
+                \[
+                    S_T = \max\nolimits_{x \in \mathcal{X}} f(x) - f(\hat{x}_T)
+                \]
+                \vspace{-0.5em}
+                \begin{itemize}
+                    \item Payoff only at $\hat{x}_T$.
+                    \item E.g., hyperparameter tuning.
+                \end{itemize}
+            \end{column}
+
+            \begin{column}{0.48\textwidth}
+                \uncover<4->{
+                    \textbf{Cumulative Regret (Bandit)}
+                    \vspace{-0.3em}
+                    \[
+                        R_T = \sum\nolimits_{t=1}^T \big(\max\nolimits_x f(x) - f(x_t)\big)
+                    \]
+                    \vspace{-0.5em}
+                    \begin{itemize}
+                        \item Exploit during optimization.
+                        \item E.g., online routing, clinical trials.
+                    \end{itemize}
+                }
+            \end{column}
+        \end{columns}
+    }
+\end{frame}
+
+% ------------------------------------------------------------------------------
+\begin{frame}{Gaussian Processes}
+    \begin{columns}[T,onlytextwidth]
+        \begin{column}{0.48\textwidth}
+            \textbf{Definition: $f \sim \mathcal{GP}(m, k)$}
             \begin{itemize}
                 \item Collection of random variables, any finite subset is jointly Gaussian:
                 \vspace{-0.3em}
@@ -642,7 +892,7 @@
         \end{column}
 
         \begin{column}{0.48\textwidth}
-            \textbf{\textcolor{teal!90!black}{Covariance Kernel $k(x, x')$}}
+            \textbf{Covariance Kernel $k(x, x')$}
             \begin{itemize}
                 \item Encodes spatial correlation:
                 \vspace{-0.3em}
@@ -668,99 +918,6 @@
     \textbf{Nonparametric Prior}: Instead of parameterizing $f(x; \mathbf{w})$, a GP directly specifies a consistent prior over the infinite-dimensional function space.
 \end{frame}
 
-% ------------------------------------------------------------------------------
-\begin{frame}{Gaussian Conditioning: Exact Belief Updating}
-    Given observations $\mathcal{D}_t = \{(x_i, y_i)\}_{i=1}^t$ with $y_i = f(x_i) + \varepsilon_i$, $\varepsilon_i \sim \mathcal{N}(0, \sigma_n^2)$:
-    \vspace{-0.3em}
-    \[
-        \begin{pmatrix} \mathbf{y} \\ f(x^*) \end{pmatrix} \sim \mathcal{N}\left( \mathbf{0}, \begin{pmatrix} \mathbf{K} + \sigma_n^2 \mathbf{I} & \mathbf{k}_* \\ \mathbf{k}_*^\top & k(x^*, x^*) \end{pmatrix} \right)
-    \]
-    \vspace{-0.4em}
-    \hrule
-    \vspace{0.25em}
-
-    \textbf{Exact Posterior Belief}: $f(x^*) \mid \mathcal{D}_t \sim \mathcal{N}(\mu_t(x^*), \sigma_t^2(x^*))$
-    \vspace{-0.3em}
-    \[
-        \mu_t(x^*) = \mathbf{k}_*^\top (\mathbf{K} + \sigma_n^2 \mathbf{I})^{-1} \mathbf{y}, \qquad
-        \sigma_t^2(x^*) = k(x^*, x^*) - \mathbf{k}_*^\top (\mathbf{K} + \sigma_n^2 \mathbf{I})^{-1} \mathbf{k}_*
-    \]
-    \vspace{-0.4em}
-
-    \begin{columns}[T,onlytextwidth]
-        \begin{column}{0.48\textwidth}
-            \textbf{\textcolor{blue!80!black}{Exploitation: Mean $\mu_t(x^*)$}}
-            \begin{itemize}
-                \item Best estimate of function value.
-                \item Interpolates data (smooths if $\sigma_n^2 > 0$).
-            \end{itemize}
-        \end{column}
-
-        \begin{column}{0.48\textwidth}
-            \textbf{\textcolor{teal!90!black}{Exploration: Variance $\sigma_t^2(x^*)$}}
-            \begin{itemize}
-                \item Quantifies \textbf{epistemic uncertainty}.
-                \item Drops near samples; high in gaps.
-            \end{itemize}
-        \end{column}
-    \end{columns}
-\end{frame}
-
-% ------------------------------------------------------------------------------
-\begin{frame}{Bayesian Optimization: A POMDP over Function Space}
-    \begin{columns}[T,onlytextwidth]
-        \begin{column}{0.48\textwidth}
-            \textbf{\textcolor{blue!80!black}{POMDP Elements}}
-            \begin{itemize}
-                \item \textbf{State} $s$: Unknown $f \sim \mathcal{GP}(0, k)$.
-                \item \textbf{Action} $a_t$: Query point $x_t \in \mathcal{X}$.
-                \item \textbf{Obs} $o_t$: $y_t = f(x_t) + \varepsilon_t$.
-                \item \textbf{Belief} $b_t$: Posterior $\mathcal{GP}(\mu_t, \sigma_t^2)$.
-            \end{itemize}
-        \end{column}
-
-        \begin{column}{0.48\textwidth}
-            \textbf{\textcolor{teal!90!black}{Decision Regimes}}
-            \begin{itemize}
-                \item \textbf{Pure Exploration}: Terminal payoff at $T$.
-                \item \textbf{Cumulative}: Reward at each step $t$.
-                \item Exact belief update via GP conditioning.
-            \end{itemize}
-        \end{column}
-    \end{columns}
-
-    \vspace{0.25em}
-    \hrule
-    \vspace{0.25em}
-
-    \begin{columns}[T,onlytextwidth]
-        \begin{column}{0.48\textwidth}
-            \textbf{Simple Regret (Pure Explore)}
-            \vspace{-0.3em}
-            \[
-                S_T = \max\nolimits_{x \in \mathcal{X}} f(x) - f(\hat{x}_T)
-            \]
-            \vspace{-0.5em}
-            \begin{itemize}
-                \item Payoff only at final recommendation $\hat{x}_T$.
-                \item E.g., hyperparameter tuning.
-            \end{itemize}
-        \end{column}
-
-        \begin{column}{0.48\textwidth}
-            \textbf{Cumulative Regret (Bandit)}
-            \vspace{-0.3em}
-            \[
-                R_T = \sum\nolimits_{t=1}^T \big(\max\nolimits_x f(x) - f(x_t)\big)
-            \]
-            \vspace{-0.5em}
-            \begin{itemize}
-                \item Exploit during optimization.
-                \item E.g., online routing, clinical trials.
-            \end{itemize}
-        \end{column}
-    \end{columns}
-\end{frame}
 
 % ------------------------------------------------------------------------------
 \begin{frame}[allowframebreaks]{References}
